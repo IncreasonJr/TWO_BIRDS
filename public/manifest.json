@@ -1,0 +1,25 @@
+{
+  "short_name": "UniDate",
+  "name": "UniDate - Campus Dating & Social Connection",
+  "description": "Connect with verified students on your university campus. Swipe, match, and chat safely.",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0f172a",
+  "theme_color": "#7c3aed",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["social", "dating", "lifestyle"]
+}
