@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { House, Heart, MessageCircle, User, ShieldCheck } from 'lucide-react';
+import { House, Heart, MessageCircle, User } from 'lucide-react';
+import { InstallPWA } from './InstallPWA';
 
 interface NavigationProps {
   unreadMatchesCount?: number;
@@ -8,25 +9,19 @@ interface NavigationProps {
 
 export const TopNavbar: React.FC = () => {
   return (
-    <header className="sticky top-0 z-40 bg-[#532E16] text-[#F5F4F4] px-4 py-3 flex items-center justify-between shadow-md border-b border-[#C67D43]/30">
+    <header className="sticky top-0 z-40 bg-[#1A1A1A] text-[#FFFFFF] px-4 py-2.5 flex items-center justify-between shadow-md border-b border-[#4A4A4A]">
       <div className="flex items-center gap-2.5">
-        <div className="h-9 w-9 rounded-xl bg-[#F3B250] text-[#532E16] flex items-center justify-center font-extrabold shadow-sm">
-          <ShieldCheck className="w-5 h-5" />
-        </div>
-        <div>
-          <span className="font-extrabold text-lg tracking-tight text-[#F5F4F4]">
-            UniDate
-          </span>
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[#F3B250] block -mt-1">
-            Stanford Campus
-          </span>
-        </div>
+        <img
+          src="/logo192.png"
+          alt="Two Birds Logo"
+          className="h-8 w-8 object-cover rounded-xl shadow-glow-gold border border-[#C9A84C]/30"
+        />
+        <span className="font-extrabold text-xl tracking-tight text-[#FFFFFF]">
+          Two Birds
+        </span>
       </div>
 
-      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5F4F4]/10 border border-[#F3B250]/30 text-[#F5F4F4] text-xs font-medium">
-        <ShieldCheck className="w-3.5 h-3.5 text-[#F3B250]" />
-        <span>Verified Student</span>
-      </div>
+      <InstallPWA variant="compact" />
     </header>
   );
 };
@@ -42,7 +37,7 @@ export const BottomTabNav: React.FC<NavigationProps> = ({ unreadMatchesCount = 0
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-[#F5F4F4] border-t border-[#C67D43]/20 px-6 py-2 shadow-2xl">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-[#1A1A1A] border-t border-[#4A4A4A] px-6 py-2 shadow-2xl">
       <div className="flex items-center justify-between">
         {navItems.map((item) => {
           const IconComponent = item.icon;
@@ -58,27 +53,27 @@ export const BottomTabNav: React.FC<NavigationProps> = ({ unreadMatchesCount = 0
                 <IconComponent
                   size={24}
                   strokeWidth={2}
-                  fill={item.name === 'Matches' && isActive ? '#F3B250' : 'none'}
-                  color={isActive ? '#F3B250' : '#C67D43'}
+                  fill={item.name === 'Matches' && isActive ? '#C9A84C' : 'none'}
+                  color={isActive ? '#C9A84C' : '#4A4A4A'}
                   className={`transition-all duration-300 ${
-                    isActive ? 'scale-110 opacity-100' : 'opacity-65 hover:opacity-100'
+                    isActive ? 'scale-110 opacity-100' : 'opacity-70 group-hover:opacity-100'
                   }`}
                 />
                 {item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1.5 -right-2 bg-[#F3B250] text-[#532E16] text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border-2 border-[#F5F4F4]">
+                  <span className="absolute -top-1.5 -right-2 bg-[#C9A84C] text-[#1A1A1A] text-[10px] font-extrabold w-4 h-4 rounded-full flex items-center justify-center border-2 border-[#1A1A1A]">
                     {item.badge}
                   </span>
                 ) : null}
               </div>
               <span
                 className={`text-[10px] tracking-wide font-semibold transition-colors ${
-                  isActive ? 'text-[#F3B250]' : 'text-[#C67D43]/70 group-hover:text-[#C67D43]'
+                  isActive ? 'text-[#FFFFFF]' : 'text-[#4A4A4A] group-hover:text-[#FFFFFF]'
                 }`}
               >
                 {item.name}
               </span>
               {isActive && (
-                <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#F3B250] shadow-glow-amber" />
+                <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#C9A84C] shadow-glow-gold" />
               )}
             </NavLink>
           );

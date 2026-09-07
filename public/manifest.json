@@ -1,25 +1,56 @@
 {
-  "short_name": "UniDate",
-  "name": "UniDate - Campus Dating & Social Connection",
-  "description": "Connect with verified students on your university campus. Swipe, match, and chat safely.",
+  "short_name": "Two Birds",
+  "name": "Two Birds ",
+  "description": "Campus Dating & Connections App for Verified University Students.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1A1A1A",
+  "theme_color": "#1A1A1A",
   "icons": [
     {
-      "src": "/pwa-192x192.png",
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/pwa-512x512.png",
+      "src": "/logo512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "background_color": "#0f172a",
-  "theme_color": "#7c3aed",
-  "display": "standalone",
-  "orientation": "portrait",
+  "shortcuts": [
+    {
+      "name": "Discover",
+      "short_name": "Discover",
+      "description": "Discover new campus matches",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "View your chat messages and matches",
+      "url": "/chat",
+      "icons": [
+        {
+          "src": "/logo192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "categories": ["social", "dating", "lifestyle"]
 }

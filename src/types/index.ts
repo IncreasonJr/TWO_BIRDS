@@ -6,6 +6,7 @@ export interface UserProfile {
   age: number;
   gender: string;
   major: string;
+  year?: 'Freshman' | 'Sophomore' | 'Junior' | 'Senior' | 'Grad Student';
   university: string;
   gradYear: number;
   bio: string;
@@ -17,6 +18,8 @@ export interface UserProfile {
     latitude: number;
     longitude: number;
   };
+  onlineStatus?: 'online' | 'offline' | 'recently';
+  lastActive?: Date | string;
   zodiacSign?: string;
   spotifyTopArtist?: string;
   dormOrCampus?: string;
@@ -33,9 +36,17 @@ export interface SwipeAction {
 
 export interface Match {
   id: string;
+  userId: string;
+  name: string;
+  age: number;
+  major: string;
+  photos: string[];
+  onlineStatus: 'online' | 'offline' | 'recently';
+  lastActive: Date | string;
+  matchedAt: Date | string;
+  messages: Message[];
   users: string[];
   user: UserProfile;
-  matchedAt: string;
   lastMessage?: string;
   lastMessageTimestamp?: string;
   unread: boolean;
@@ -50,7 +61,11 @@ export interface Message {
   text: string;
   timestamp: string;
   isRead: boolean;
+  type?: 'text' | 'voice';
+  audioUrl?: string;
+  duration?: string;
 }
+
 
 export interface FilterSettings {
   maxDistance: number;

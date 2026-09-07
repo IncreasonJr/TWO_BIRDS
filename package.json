@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "emoji-picker-react": "^4.20.1",
     "framer-motion": "^13.2.0",
     "lucide-react": "^1.41.0",
     "react": "^19.2.8",
+    "react-audio-voice-recorder": "^2.2.0",
     "react-dom": "^19.2.8",
     "react-hook-form": "^7.87.0",
     "react-router-dom": "^7.18.3"
