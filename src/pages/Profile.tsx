@@ -153,7 +153,7 @@ export const Profile: React.FC = () => {
   const mainPhoto = currentUser.photos && currentUser.photos.length > 0 ? currentUser.photos[0] : null;
 
   return (
-    <div className="flex flex-col h-full flex-1 pb-24 max-w-md mx-auto px-4 py-4 space-y-5 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF] select-none">
+    <div className="flex flex-col h-full flex-1 pb-10 max-w-md mx-auto px-4 py-3 space-y-3.5 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF] select-none">
       {/* Toast Notification */}
       <AnimatePresence>
         {showToast && (
@@ -170,29 +170,29 @@ export const Profile: React.FC = () => {
       </AnimatePresence>
 
       {/* 1. TOP PROFILE CARD */}
-      <div className="bg-[#333333] border border-[#4A4A4A] rounded-3xl p-6 text-center shadow-xl relative overflow-hidden flex flex-col items-center space-y-3">
+      <div className="bg-[#333333] border border-[#4A4A4A] rounded-3xl p-4 sm:p-5 text-center shadow-xl relative overflow-hidden flex flex-col items-center space-y-2.5 shrink-0">
         {/* Glow backdrop */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-32 bg-[#C9A84C]/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* 120px Circular Photo with Gold Border Ring */}
-        <div className="relative group">
-          <div className="w-[120px] h-[120px] rounded-full border-4 border-[#C9A84C] p-1 shadow-glow-gold relative overflow-hidden bg-[#1A1A1A]">
+        {/* Responsive Circular Photo with Gold Border Ring */}
+        <div className="relative group shrink-0">
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-[#C9A84C] p-1 shadow-glow-gold relative overflow-hidden bg-[#1A1A1A] shrink-0">
             {mainPhoto ? (
               <img
                 src={mainPhoto}
                 alt={currentUser.name}
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-full h-full rounded-full bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-3xl flex items-center justify-center">
+              <div className="w-full h-full rounded-full bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-2xl flex items-center justify-center">
                 {getInitials(currentUser.name)}
               </div>
             )}
           </div>
 
           {/* Camera Upload Badge */}
-          <label className="absolute bottom-1 right-1 p-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] hover:scale-110 active:scale-95 shadow-md cursor-pointer transition border-2 border-[#1A1A1A]">
-            <Camera className="w-4 h-4 stroke-[2.5]" />
+          <label className="absolute bottom-0 right-0 p-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] hover:scale-110 active:scale-95 shadow-md cursor-pointer transition border-2 border-[#1A1A1A]">
+            <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
             <input
               type="file"
               accept="image/*"
@@ -203,14 +203,14 @@ export const Profile: React.FC = () => {
         </div>
 
         {/* User Info */}
-        <div className="space-y-1 z-10">
-          <h1 className="text-2xl font-extrabold text-[#FFFFFF] tracking-tight">
+        <div className="space-y-0.5 z-10">
+          <h1 className="text-xl font-extrabold text-[#FFFFFF] tracking-tight">
             {currentUser.name}, <span className="font-bold text-[#C9A84C]">{currentUser.age}</span>
           </h1>
-          <p className="text-sm font-semibold text-[#A0A0A0]">
+          <p className="text-xs font-semibold text-[#A0A0A0]">
             {currentUser.major} • <span className="text-[#FFFFFF]">{currentUser.year}</span>
           </p>
-          <p className="text-xs text-[#A0A0A0] font-medium pt-0.5">
+          <p className="text-[11px] text-[#A0A0A0] font-medium pt-0.5">
             {currentUser.email}
           </p>
         </div>
@@ -218,60 +218,60 @@ export const Profile: React.FC = () => {
         {/* Edit Button */}
         <button
           onClick={handleOpenEditor}
-          className="w-full mt-2 py-2.5 rounded-2xl bg-[#1A1A1A] hover:bg-[#4A4A4A]/40 border border-[#C9A84C]/50 text-[#C9A84C] text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-sm"
+          className="w-full mt-1 py-2 rounded-2xl bg-[#1A1A1A] hover:bg-[#4A4A4A]/40 border border-[#C9A84C]/50 text-[#C9A84C] text-xs font-extrabold flex items-center justify-center gap-2 transition active:scale-95 shadow-sm"
         >
-          <Edit3 className="w-4 h-4 text-[#C9A84C]" />
+          <Edit3 className="w-3.5 h-3.5 text-[#C9A84C]" />
           Edit Profile
         </button>
       </div>
 
       {/* 2. PROFILE STATS GRID */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3 text-center space-y-1 shadow-md">
-          <div className="inline-flex p-2 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
-            <Heart className="w-4 h-4 fill-[#C9A84C]" />
+      <div className="grid grid-cols-3 gap-2 shrink-0">
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-2.5 text-center space-y-0.5 shadow-md">
+          <div className="inline-flex p-1.5 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
+            <Heart className="w-3.5 h-3.5 fill-[#C9A84C]" />
           </div>
-          <p className="text-xl font-extrabold text-[#FFFFFF]">{matches.length}</p>
-          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-wider">Matches</p>
+          <p className="text-lg font-extrabold text-[#FFFFFF]">{matches.length}</p>
+          <p className="text-[9px] font-bold text-[#A0A0A0] uppercase tracking-wider">Matches</p>
         </div>
 
-        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3 text-center space-y-1 shadow-md">
-          <div className="inline-flex p-2 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
-            <Flame className="w-4 h-4 fill-[#C9A84C]" />
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-2.5 text-center space-y-0.5 shadow-md">
+          <div className="inline-flex p-1.5 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
+            <Flame className="w-3.5 h-3.5 fill-[#C9A84C]" />
           </div>
-          <p className="text-xl font-extrabold text-[#FFFFFF]">{totalSwipes}</p>
-          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-wider">Swipes</p>
+          <p className="text-lg font-extrabold text-[#FFFFFF]">{totalSwipes}</p>
+          <p className="text-[9px] font-bold text-[#A0A0A0] uppercase tracking-wider">Swipes</p>
         </div>
 
-        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3 text-center space-y-1 shadow-md">
-          <div className="inline-flex p-2 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
-            <Sparkles className="w-4 h-4 text-[#C9A84C]" />
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-2.5 text-center space-y-0.5 shadow-md">
+          <div className="inline-flex p-1.5 rounded-xl bg-[#C9A84C]/15 text-[#C9A84C]">
+            <Sparkles className="w-3.5 h-3.5 text-[#C9A84C]" />
           </div>
-          <p className="text-xl font-extrabold text-[#C9A84C]">{completionPercentage}%</p>
-          <p className="text-[10px] font-bold text-[#A0A0A0] uppercase tracking-wider">Complete</p>
+          <p className="text-lg font-extrabold text-[#C9A84C]">{completionPercentage}%</p>
+          <p className="text-[9px] font-bold text-[#A0A0A0] uppercase tracking-wider">Complete</p>
         </div>
       </div>
 
       {/* BIO CARD */}
-      <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-1.5 shadow-md">
-        <h3 className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider">About Me</h3>
+      <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3.5 space-y-1 shadow-md shrink-0">
+        <h3 className="text-[11px] font-bold text-[#C9A84C] uppercase tracking-wider">About Me</h3>
         <p className="text-xs text-[#FFFFFF] font-medium leading-relaxed">
           {currentUser.bio || <span className="italic text-[#A0A0A0]">Tell us about yourself!</span>}
         </p>
       </div>
 
       {/* MY INTERESTS CHIPS DISPLAY */}
-      <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2.5 shadow-md">
+      <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3.5 space-y-2 shadow-md shrink-0">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-[#C9A84C] uppercase tracking-wider">My Interests</h3>
+          <h3 className="text-[11px] font-bold text-[#C9A84C] uppercase tracking-wider">My Interests</h3>
           <span className="text-[10px] text-[#A0A0A0] font-semibold">{currentUser.interests.length} Selected</span>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {currentUser.interests.map((interest) => (
             <span
               key={interest}
-              className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#C9A84C] text-[#1A1A1A] shadow-sm flex items-center gap-1"
+              className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#C9A84C] text-[#1A1A1A] shadow-sm flex items-center gap-1"
             >
               {interest}
             </span>
@@ -280,7 +280,7 @@ export const Profile: React.FC = () => {
       </div>
 
       {/* 4. SETTINGS SECTION */}
-      <div className="space-y-2">
+      <div className="space-y-2 shrink-0">
         <h3 className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider px-1">Settings & Preferences</h3>
 
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl overflow-hidden divide-y divide-[#4A4A4A] shadow-md">

@@ -34,9 +34,9 @@ export const Home: React.FC = () => {
   }, [newMatch, dismissMatchModal]);
 
   return (
-    <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-20 max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
+    <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-1 max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
       {/* 3-Card Stack Area */}
-      <div className="relative flex-1 my-1 w-full h-full min-h-0">
+      <div className="relative flex-1 my-1 w-full h-full min-h-0 overflow-hidden">
         {hasMore && currentProfile ? (
           <>
             {thirdProfile && (
@@ -90,43 +90,43 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Control Buttons Bar */}
-      <div className="flex items-center justify-around py-2 px-2 z-20">
+      <div className="flex items-center justify-around py-1 px-2 z-30 shrink-0 h-16 w-full bg-[#1A1A1A]">
         <button
           onClick={rewind}
           disabled={!canRewind}
-          className={`p-3 rounded-full bg-[#333333] border border-[#4A4A4A] text-[#C9A84C] transition-all ${
+          className={`p-2.5 sm:p-3 rounded-full bg-[#333333] border border-[#4A4A4A] text-[#C9A84C] transition-all ${
             canRewind ? 'hover:scale-110 active:scale-95 shadow-md hover:border-[#C9A84C]' : 'opacity-40 cursor-not-allowed'
           }`}
           title="Rewind"
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         <button
           onClick={() => handleSwipe('left')}
           disabled={!hasMore}
-          className="p-4 rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#FFFFFF] hover:bg-[#4A4A4A]/40 hover:scale-110 active:scale-95 transition-all shadow-md"
+          className="p-3.5 sm:p-4 rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#FFFFFF] hover:bg-[#4A4A4A]/40 hover:scale-110 active:scale-95 transition-all shadow-md"
           title="Pass"
         >
-          <X className="w-7 h-7 stroke-[2.5]" />
+          <X className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
         </button>
 
         <button
           onClick={() => handleSwipe('up')}
           disabled={!hasMore}
-          className="p-3 rounded-full bg-[#333333] border-2 border-[#C9A84C] text-[#C9A84C] hover:scale-110 active:scale-95 transition-all shadow-md"
+          className="p-2.5 sm:p-3 rounded-full bg-[#333333] border-2 border-[#C9A84C] text-[#C9A84C] hover:scale-110 active:scale-95 transition-all shadow-md"
           title="Super Like"
         >
-          <Star className="w-6 h-6 fill-[#C9A84C] text-[#C9A84C]" />
+          <Star className="w-5 h-5 sm:w-6 sm:h-6 fill-[#C9A84C] text-[#C9A84C]" />
         </button>
 
         <button
           onClick={() => handleSwipe('right')}
           disabled={!hasMore}
-          className="p-4 rounded-full bg-[#C9A84C] border-2 border-[#C9A84C] text-[#1A1A1A] hover:scale-110 active:scale-95 transition-all shadow-glow-gold"
+          className="p-3.5 sm:p-4 rounded-full bg-[#C9A84C] border-2 border-[#C9A84C] text-[#1A1A1A] hover:scale-110 active:scale-95 transition-all shadow-glow-gold"
           title="Like"
         >
-          <Heart className="w-7 h-7 fill-[#1A1A1A] stroke-[#1A1A1A]" />
+          <Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-[#1A1A1A] stroke-[#1A1A1A]" />
         </button>
       </div>
 
