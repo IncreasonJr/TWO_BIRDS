@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
 import { formatGradYear, formatDistance, getZodiacEmoji } from '../utils/formatters';
-import { MapPin, GraduationCap, Info, X, Star, Music, Sparkles, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { MapPin, GraduationCap, Info, X, Music, Sparkles, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 interface SwipeCardProps {
   profile: UserProfile;
-  onSwipe: (direction: 'left' | 'right' | 'up') => void;
+  onSwipe: (direction: 'left' | 'right') => void;
   isFront: boolean;
   depth?: number;
 }
@@ -23,12 +23,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
 
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const passOpacity = useTransform(x, [-20, -120], [0, 1]);
-  const superlikeOpacity = useTransform(y, [-20, -100], [0, 1]);
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.y < -150 && Math.abs(info.offset.x) < 80) {
-      onSwipe('up');
-    } else if (info.offset.x > 100) {
+    if (info.offset.x > 100) {
       onSwipe('right');
     } else if (info.offset.x < -100) {
       onSwipe('left');
@@ -133,14 +130,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
             className="absolute top-10 right-8 z-30 border-4 border-[#4A4A4A] text-[#FFFFFF] font-extrabold text-3xl px-4 py-1 rounded-xl rotate-[15deg] uppercase tracking-wider shadow-lg bg-[#1A1A1A]/80 backdrop-blur-sm pointer-events-none"
           >
             PASS
-          </motion.div>
-
-          <motion.div
-            style={{ opacity: superlikeOpacity }}
-            className="absolute bottom-36 left-1/2 -translate-x-1/2 z-30 border-4 border-[#C9A84C] text-[#C9A84C] font-extrabold text-2xl px-6 py-1 rounded-xl uppercase tracking-wider shadow-lg bg-[#1A1A1A]/90 backdrop-blur-md flex items-center gap-2 pointer-events-none"
-          >
-            <Star className="w-6 h-6 fill-[#C9A84C]" />
-            SUPER LIKE
           </motion.div>
 
           {/* Student Profile Card Overlay */}

@@ -15,14 +15,14 @@ export function useSwipe() {
   const nextProfile = profiles[currentIndex + 1] || null;
   const thirdProfile = profiles[currentIndex + 2] || null;
 
-  const handleSwipe = useCallback((direction: 'left' | 'right' | 'up') => {
+  const handleSwipe = useCallback((direction: 'left' | 'right') => {
     if (!currentProfile) return;
 
     setSwipedUserIds((prev) => [...prev, currentProfile.id]);
     setHistory((prev) => [...prev, currentProfile]);
     setSwipeCount((prev) => prev + 1);
 
-    if (direction === 'right' || direction === 'up') {
+    if (direction === 'right') {
       setLikedUserIds((prev) => [...prev, currentProfile.id]);
 
       // Mutual match trigger simulation
