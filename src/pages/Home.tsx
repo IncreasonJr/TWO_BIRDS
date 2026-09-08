@@ -37,7 +37,7 @@ export const Home: React.FC = () => {
   return (
     <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
       {/* 3-Card Stack Area */}
-      <div className="relative flex-1 mb-1.5 w-full h-full min-h-0 overflow-hidden">
+      <div className="relative flex-1 mb-[12px] w-full min-h-0 overflow-hidden">
         {hasMore && currentProfile ? (
           <>
             {thirdProfile && (
