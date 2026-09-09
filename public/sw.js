@@ -1,4 +1,4 @@
-const CACHE_NAME = 'twobirds-pwa-v1';
+const CACHE_NAME = 'twobirds-pwa-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -7,30 +7,37 @@ const STATIC_ASSETS = [
   '/favicon.ico',
   '/logo192.png',
   '/logo512.png',
-  '/logo.png',
-  '/favicon.png'
+  '/logo.png'
 ];
 
 // Install event: cache core static assets
 self.addEventListener('install', (event) => {
+  console.log('[Service Worker] Install event triggered');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching static assets');
+      console.log('[Service Worker] Pre-caching static assets');
       return cache.addAll(STATIC_ASSETS);
-    }).then(() => {
-      return self.skipWaiting();
     })
   );
 });
 
-// Activate event: cleanup old caches
+// Message listener for SKIP_WAITING
+self.addEventListener('message', (event) => {
+  if (event.data && (event.data.type === 'SKIP_WAITING' || event.data === 'SKIP_WAITING')) {
+    console.log('[Service Worker] Received SKIP_WAITING signal');
+    self.skipWaiting();
+  }
+});
+
+// Activate event: cleanup old caches immediately
 self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activate event triggered');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
+            console.log('[Service Worker] Deleting outdated cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -41,57 +48,51 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event: Cache-First strategy with network fallback & dynamic caching
+// Fetch event: Network-First for HTML/Navigation, Cache-First for static assets
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests and chrome-extension or external analytics
   if (event.request.method !== 'GET') return;
-  
-  const url = new URL(event.request.url);
 
-  // Handle SPA navigation requests
-  if (event.request.mode === 'navigate') {
+  // Network-First strategy for SPA navigation / HTML requests
+  if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
-      caches.match('/index.html').then((cachedResponse) => {
-        if (cachedResponse) {
-          // Fetch update in background
-          fetch(event.request).then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put('/index.html', networkResponse);
-              });
-            }
-          }).catch(() => {
-            // Ignore network error if offline
-          });
-          return cachedResponse;
-        }
-        return fetch(event.request);
-      })
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put('/index.html', responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          console.log('[Service Worker] Network failed, serving cached index.html');
+          return caches.match('/index.html');
+        })
     );
     return;
   }
 
-  // Cache-first strategy for static assets, scripts, styles, images
+  // Cache-First strategy for static assets (js, css, images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Return cached asset and update cache asynchronously in background
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
-            });
-          }
-        }).catch(() => {
-          // Silent catch for offline fetch
-        });
-
+        // Asynchronously update asset cache in background
+        fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, networkResponse.clone());
+              });
+            }
+          })
+          .catch(() => {});
         return cachedResponse;
       }
 
-      // If not in cache, fetch from network and cache dynamically
+      // If not in cache, fetch from network and dynamically cache
       return fetch(event.request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && !event.request.url.includes('i.pravatar.cc') && !event.request.url.includes('images.unsplash.com')) {
+        if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && !event.request.url.includes('images.unsplash.com'))) {
           return networkResponse;
         }
 
@@ -102,7 +103,6 @@ self.addEventListener('fetch', (event) => {
 
         return networkResponse;
       }).catch(() => {
-        // Return fallback if available
         if (event.request.headers.get('accept')?.includes('text/html')) {
           return caches.match('/index.html');
         }

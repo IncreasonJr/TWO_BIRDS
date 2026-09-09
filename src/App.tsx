@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { TopNavbar, BottomTabNav } from './components/Navigation';
 import { InstallPWA } from './components/InstallPWA';
+import { UpdateNotification } from './components/UpdateNotification';
 import { Home } from './pages/Home';
 import { Matches } from './pages/Matches';
 import { Chat } from './pages/Chat';
@@ -17,6 +18,7 @@ const AppContent: React.FC = () => {
     <div className="h-screen h-[100dvh] w-full bg-[#1A1A1A] text-[#FFFFFF] flex flex-col overflow-hidden select-none">
       {/* Mobile Container Shell */}
       <div className="w-full max-w-md mx-auto h-full flex flex-col bg-[#1A1A1A] border-x border-[#4A4A4A] shadow-2xl relative overflow-hidden pb-14">
+        <UpdateNotification />
         <InstallPWA variant="banner" />
         <TopNavbar />
         <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
@@ -47,4 +49,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-
