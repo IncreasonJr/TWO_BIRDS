@@ -154,7 +154,7 @@ export const Chat: React.FC = () => {
   const matchPhotos = matchUser.photos && matchUser.photos.length > 0 ? matchUser.photos : activeMatch.photos;
 
   return (
-    <div className="flex flex-col h-full flex-1 pb-16 max-w-md mx-auto relative overflow-hidden bg-[#1A1A1A] text-[#FFFFFF] select-none">
+    <div className="flex flex-col h-full flex-1 max-w-md mx-auto relative overflow-hidden bg-[#1A1A1A] text-[#FFFFFF] select-none">
       {/* Match Header (Top) */}
       <div className="bg-[#1A1A1A] border-b border-[#4A4A4A] px-4 py-2.5 flex items-center justify-between flex-shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
@@ -200,8 +200,8 @@ export const Chat: React.FC = () => {
         </button>
       </div>
 
-      {/* Message Feed Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3.5">
+      {/* Message Feed Area (Scrollable Only Here) */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3.5">
         {/* Match Header Card Watermark */}
         <div
           onClick={() => setIsProfileOpen(true)}
@@ -240,16 +240,16 @@ export const Chat: React.FC = () => {
               key={msg.id}
               className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
             >
-              <div className="flex items-end gap-1.5 max-w-[85%]">
+              <div className="flex items-end gap-1.5 max-w-[85%] sm:max-w-[80%]">
                 {!isMe && (
                   <img
                     src={matchPhotos[0]}
                     alt={activeMatch.name}
-                    className="w-6 h-6 rounded-full object-cover border border-[#C9A84C] mb-1"
+                    className="w-6 h-6 rounded-full object-cover border border-[#C9A84C] mb-1 flex-shrink-0"
                   />
                 )}
                 <div
-                  className={`px-4 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                  className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm break-words overflow-hidden max-w-full ${
                     isMe
                       ? 'bg-[#C9A84C] text-[#1A1A1A] font-bold rounded-br-none shadow-glow-gold'
                       : 'bg-[#333333] border border-[#4A4A4A] text-[#FFFFFF] rounded-bl-none font-medium'
@@ -258,7 +258,7 @@ export const Chat: React.FC = () => {
                   {isVoice ? (
                     <VoiceMessageBubble msg={msg} isMe={isMe} />
                   ) : (
-                    msg.text
+                    <span className="break-words whitespace-pre-wrap">{msg.text}</span>
                   )}
                 </div>
               </div>
@@ -280,11 +280,10 @@ export const Chat: React.FC = () => {
         </AnimatePresence>
 
         <div ref={messagesEndRef} />
-
       </div>
 
-      {/* Icebreaker Suggestions */}
-      <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#4A4A4A] bg-[#1A1A1A]">
+      {/* Icebreaker Suggestions (Sticky Bottom) */}
+      <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#4A4A4A] bg-[#1A1A1A] flex-shrink-0">
         {ICEBREAKERS.map((item, index) => {
           const IconComp = item.icon;
           return (
@@ -300,8 +299,8 @@ export const Chat: React.FC = () => {
         })}
       </div>
 
-      {/* ENHANCED CHAT INPUT COMPONENT */}
-      <div className="p-3 bg-[#1A1A1A] border-t border-[#4A4A4A] z-30 shadow-lg">
+      {/* ENHANCED CHAT INPUT COMPONENT (Fixed Sticky at Bottom) */}
+      <div className="px-3 pt-1.5 pb-[15px] bg-[#1A1A1A] z-30 shadow-lg flex-shrink-0">
         <ChatInput
           onSendMessage={handleSendMessage}
           onSendVoiceNote={handleSendVoiceNote}

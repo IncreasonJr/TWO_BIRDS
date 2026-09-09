@@ -42,6 +42,19 @@
   border-top: 1px solid rgba(74, 74, 74, 0.5);
 }
 
+/* Android WebKit / Mobile Touch Utility Styles */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.swipe-controls-bar {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 40 !important;
+}
+
 /* Custom Scrollbar for Luxe Dark Theme */
 ::-webkit-scrollbar {
   width: 4px;

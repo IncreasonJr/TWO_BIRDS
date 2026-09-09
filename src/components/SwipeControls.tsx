@@ -17,12 +17,12 @@ export const SwipeControls: React.FC<SwipeControlsProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="flex items-center justify-center gap-10 sm:gap-12 md:gap-14 pt-0 pb-0 px-2 z-40 shrink-0 w-full bg-[#1A1A1A] select-none touch-manipulation">
+    <div className="swipe-controls-bar flex items-center justify-center gap-8 sm:gap-10 md:gap-12 py-1 px-2 z-40 shrink-0 w-full bg-[#1A1A1A] select-none touch-manipulation relative">
       {/* 1. Refresh / Rewind Button */}
       <button
         onClick={onRewind}
         disabled={!canRewind || disabled}
-        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#C9A84C] transition-all ${
+        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#C9A84C] transition-all cursor-pointer touch-manipulation ${
           canRewind && !disabled
             ? 'hover:scale-110 active:scale-95 shadow-md hover:border-[#C9A84C]'
             : 'opacity-40 cursor-not-allowed'
@@ -36,7 +36,7 @@ export const SwipeControls: React.FC<SwipeControlsProps> = ({
       <button
         onClick={onPass}
         disabled={disabled}
-        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#FFFFFF] transition-all shadow-md ${
+        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#333333] border-2 border-[#4A4A4A] text-[#FFFFFF] transition-all shadow-md cursor-pointer touch-manipulation ${
           disabled
             ? 'opacity-40 cursor-not-allowed'
             : 'hover:bg-[#4A4A4A]/40 hover:scale-110 active:scale-95'
@@ -50,7 +50,7 @@ export const SwipeControls: React.FC<SwipeControlsProps> = ({
       <button
         onClick={onLike}
         disabled={disabled}
-        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#C9A84C] border-2 border-[#C9A84C] text-[#1A1A1A] transition-all shadow-glow-gold ${
+        className={`w-12 h-12 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-full bg-[#C9A84C] border-2 border-[#C9A84C] text-[#1A1A1A] transition-all shadow-glow-gold cursor-pointer touch-manipulation ${
           disabled
             ? 'opacity-40 cursor-not-allowed'
             : 'hover:scale-110 active:scale-95'
