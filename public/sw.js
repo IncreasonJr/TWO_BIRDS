@@ -1,4 +1,4 @@
-const CACHE_NAME = 'twobirds-pwa-v2';
+const CACHE_NAME = 'twobirds-pwa-v1.3.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -10,28 +10,28 @@ const STATIC_ASSETS = [
   '/logo.png'
 ];
 
-// Install event: cache core static assets
+// Install event: pre-cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Install event triggered');
+  console.log('[Service Worker] Install event triggered (v1.3.0)');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching static assets');
+      console.log('[Service Worker] Pre-caching static core assets');
       return cache.addAll(STATIC_ASSETS);
     })
   );
 });
 
-// Message listener for SKIP_WAITING
+// Message listener for SKIP_WAITING signal
 self.addEventListener('message', (event) => {
   if (event.data && (event.data.type === 'SKIP_WAITING' || event.data === 'SKIP_WAITING')) {
-    console.log('[Service Worker] Received SKIP_WAITING signal');
+    console.log('[Service Worker] Received SKIP_WAITING command. Activating new worker immediately.');
     self.skipWaiting();
   }
 });
 
-// Activate event: cleanup old caches immediately
+// Activate event: purge old caches and claim clients immediately
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activate event triggered');
+  console.log('[Service Worker] Activate event triggered (v1.3.0)');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -48,11 +48,11 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event: Network-First for HTML/Navigation, Cache-First for static assets
+// Fetch event: Network-First for HTML/SPA Navigation, Cache-First for hashed assets
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  // Network-First strategy for SPA navigation / HTML requests
+  // Network-First strategy for SPA navigation and index.html
   if (event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
       fetch(event.request)
@@ -66,18 +66,18 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          console.log('[Service Worker] Network failed, serving cached index.html');
+          console.log('[Service Worker] Network request failed. Serving cached index.html fallback.');
           return caches.match('/index.html');
         })
     );
     return;
   }
 
-  // Cache-First strategy for static assets (js, css, images)
+  // Cache-First strategy for static bundle assets (js, css, images)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
-        // Asynchronously update asset cache in background
+        // Background revalidate for cached assets
         fetch(event.request)
           .then((networkResponse) => {
             if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
@@ -90,7 +90,7 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
-      // If not in cache, fetch from network and dynamically cache
+      // If not in cache, fetch from network and cache dynamically
       return fetch(event.request).then((networkResponse) => {
         if (!networkResponse || networkResponse.status !== 200 || (networkResponse.type !== 'basic' && !event.request.url.includes('images.unsplash.com'))) {
           return networkResponse;

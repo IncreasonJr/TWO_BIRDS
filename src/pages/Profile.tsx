@@ -17,7 +17,8 @@ import {
   ChevronRight,
   User as UserIcon,
   AlertCircle,
-  Download
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -348,6 +349,41 @@ export const Profile: React.FC = () => {
             </div>
             <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
           </button>
+
+          {/* App Version & Manual Update Check */}
+          <div className="px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <RefreshCw className="w-4 h-4 text-[#C9A84C]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-extrabold text-[#FFFFFF]">App Version</p>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/40">
+                    v1.3.0
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Build 2026.09.09 • Latest version active</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistration().then((reg) => {
+                    if (reg) {
+                      reg.update();
+                      setToastMessage('Checking for app updates...');
+                      setShowToast(true);
+                      setTimeout(() => setShowToast(false), 3000);
+                    }
+                  });
+                }
+              }}
+              className="px-3 py-1 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-[10px] font-extrabold shadow-glow-gold hover:bg-[#D4B55B] active:scale-95 transition"
+            >
+              Check Updates
+            </button>
+          </div>
 
           {/* Logout */}
           <button
