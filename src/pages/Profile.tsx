@@ -18,7 +18,8 @@ import {
   User as UserIcon,
   AlertCircle,
   Download,
-  RefreshCw
+  RefreshCw,
+  RotateCcw
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -139,6 +140,31 @@ export const Profile: React.FC = () => {
     setTimeout(() => {
       setShowToast(false);
     }, 3500);
+  };
+
+  const handleClearCacheAndForceRefresh = async () => {
+    try {
+      triggerToast('Clearing caches & restarting app...');
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+        }
+      }
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const name of cacheNames) {
+          await caches.delete(name);
+        }
+      }
+      sessionStorage.clear();
+      setTimeout(() => {
+        window.location.reload();
+      }, 600);
+    } catch (err) {
+      console.error('Failed to clear cache:', err);
+      window.location.reload();
+    }
   };
 
   // Helper for Initials
@@ -360,10 +386,10 @@ export const Profile: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-extrabold text-[#FFFFFF]">App Version</p>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/40">
-                    v1.3.0
+                    v2.0.0
                   </span>
                 </div>
-                <p className="text-[10px] text-[#A0A0A0] font-medium">Build 2026.09.09 • Latest version active</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Network-First Strategy Active</p>
               </div>
             </div>
             <button
@@ -384,6 +410,25 @@ export const Profile: React.FC = () => {
               Check Updates
             </button>
           </div>
+
+          {/* Force Refresh & Clear Cache */}
+          <button
+            onClick={handleClearCacheAndForceRefresh}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <RotateCcw className="w-4 h-4 text-[#C9A84C]" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Force Refresh & Clear Cache</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Purges local SW caches & reloads latest version</p>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full bg-[#1A1A1A] border border-[#C9A84C]/40 text-[#C9A84C] text-[10px] font-extrabold hover:bg-[#C9A84C] hover:text-[#1A1A1A] transition active:scale-95">
+              Clear Cache
+            </span>
+          </button>
 
           {/* Logout */}
           <button

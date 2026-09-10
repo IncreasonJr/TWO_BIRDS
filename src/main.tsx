@@ -3,6 +3,41 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 
+const APP_VERSION = '2.0.0';
+
+// Check server version on application boot to detect deployment changes
+const checkVersionAndEvictStaleCache = async () => {
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.version && data.version !== APP_VERSION) {
+        console.warn(`[Version Check] Mismatch detected! Server: ${data.version}, Local: ${APP_VERSION}. Purging caches...`);
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+          }
+        }
+        if ('caches' in window) {
+          const cacheKeys = await caches.keys();
+          for (const key of cacheKeys) {
+            await caches.delete(key);
+          }
+        }
+        window.location.reload();
+        return;
+      }
+    }
+  } catch (err) {
+    console.log('[Version Check] Network check skipped or offline:', err);
+  }
+};
+
+// Render React Application
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
@@ -11,18 +46,22 @@ createRoot(document.getElementById('root')!).render(
 
 // Register Service Worker for PWA functionality & robust update management
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
+  window.addEventListener('load', async () => {
+    // Execute version check first
+    await checkVersionAndEvictStaleCache();
+
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
         console.log('[PWA] ServiceWorker registered with scope:', registration.scope);
 
-        // Force check for updates immediately on load
+        // Immediate update check on load
         registration.update().catch((err) => console.log('[PWA] Initial update check:', err));
 
-        // Check if a worker is already waiting (installed in background)
+        // Detect if worker is already waiting
         if (registration.waiting) {
           console.log('[PWA] Waiting service worker detected on load.');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
           window.dispatchEvent(new CustomEvent('swUpdated', { detail: registration }));
         }
 
@@ -32,24 +71,27 @@ if ('serviceWorker' in navigator) {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[PWA] New update installed and waiting for activation.');
+                console.log('[PWA] New update installed. Sending SKIP_WAITING signal...');
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
                 window.dispatchEvent(new CustomEvent('swUpdated', { detail: registration }));
               }
             });
           }
         });
 
-        // Force update check when user returns to app (visibilitychange on mobile)
+        // Visibility check when returning to app foreground (mobile tab switch)
         document.addEventListener('visibilitychange', () => {
           if (document.visibilityState === 'visible') {
-            registration.update().catch((err) => console.log('[PWA] Visibility update check:', err));
+            registration.update().catch((err) => console.log('[PWA] Visibility update check error:', err));
+            checkVersionAndEvictStaleCache();
           }
         });
 
-        // Periodically check for updates every 15 minutes
+        // Periodic update check every 5 minutes
         setInterval(() => {
-          registration.update().catch((err) => console.log('[PWA] Periodic update check:', err));
-        }, 15 * 60 * 1000);
+          registration.update().catch((err) => console.log('[PWA] Periodic update check error:', err));
+          checkVersionAndEvictStaleCache();
+        }, 5 * 60 * 1000);
       })
       .catch((err) => {
         console.log('[PWA] ServiceWorker registration error:', err);
@@ -61,7 +103,7 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!refreshing) {
       refreshing = true;
-      console.log('[PWA] Service worker controller changed. Refreshing page...');
+      console.log('[PWA] Service worker controller changed. Reloading app...');
       window.location.reload();
     }
   });
