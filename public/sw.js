@@ -1,23 +1,20 @@
-const CACHE_NAME = 'twobirds-pwa-v2.0.0';
+const CACHE_NAME = 'twobirds-pwa-v2.1.0';
 
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
-  '/version.json',
   '/favicon.ico',
   '/logo192.png',
   '/logo512.png',
   '/logo.png'
 ];
 
-// Install event: pre-cache static core assets and skip waiting immediately
+// Install event: pre-cache static branding assets and skip waiting immediately
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Install event triggered (v2.0.0)');
+  console.log('[Service Worker] Install event triggered (v2.1.0)');
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Pre-caching static core assets');
+      console.log('[Service Worker] Pre-caching static core icons/manifest');
       return cache.addAll(STATIC_ASSETS);
     }).catch((err) => console.log('[Service Worker] Pre-cache error:', err))
   );

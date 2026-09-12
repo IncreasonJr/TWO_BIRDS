@@ -386,7 +386,7 @@ export const Profile: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-extrabold text-[#FFFFFF]">App Version</p>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/40">
-                    v2.0.0
+                    v2.1.0
                   </span>
                 </div>
                 <p className="text-[10px] text-[#A0A0A0] font-medium">Network-First Strategy Active</p>

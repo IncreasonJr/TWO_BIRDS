@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.tsx';
 
-const APP_VERSION = '2.0.0';
+declare const __APP_BUILD_TIME__: string;
+const CURRENT_VERSION = typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'dev';
 
 // Check server version on application boot to detect deployment changes
 const checkVersionAndEvictStaleCache = async () => {
+  if (CURRENT_VERSION === 'dev') return;
   try {
     const res = await fetch(`/version.json?t=${Date.now()}`, {
       cache: 'no-store',
@@ -14,8 +16,8 @@ const checkVersionAndEvictStaleCache = async () => {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.version && data.version !== APP_VERSION) {
-        console.warn(`[Version Check] Mismatch detected! Server: ${data.version}, Local: ${APP_VERSION}. Purging caches...`);
+      if (data.version && data.version !== CURRENT_VERSION) {
+        console.warn(`[Version Check] New version detected! Server: ${data.version}, Local: ${CURRENT_VERSION}. Purging caches...`);
         if ('serviceWorker' in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
           for (const registration of registrations) {
