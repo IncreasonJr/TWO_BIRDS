@@ -12,8 +12,8 @@ export const NotFound: React.FC = () => {
       </div>
 
       <div className="space-y-2 max-w-xs">
-        <h1 className="text-4xl font-extrabold text-[#C9A84C]">404</h1>
-        <h2 className="text-xl font-bold text-[#FFFFFF]">Page Not Found</h2>
+        <h1 className="text-4xl font-extrabold text-[#C9A84C] font-serif">404</h1>
+        <h2 className="text-xl font-bold text-[#FFFFFF] font-serif">Page Not Found</h2>
         <p className="text-xs text-[#A0A0A0] leading-relaxed">
           Looks like this page flew away! Return to the discovery feed to find your match.
         </p>

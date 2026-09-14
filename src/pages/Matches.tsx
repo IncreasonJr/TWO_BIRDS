@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { Sparkles, Search, ChevronRight, Heart } from 'lucide-react';
-import { formatGradYear } from '../utils/formatters';
 
 export const Matches: React.FC = () => {
   const { matches, setActiveMatchId } = useMatches();
@@ -119,12 +118,6 @@ export const Matches: React.FC = () => {
 
                     <div className="flex items-center gap-2 text-xs text-[#4A4A4A] font-medium mt-0.5">
                       <span className="text-[#C9A84C] font-semibold">{match.major}</span>
-                      {match.user?.gradYear && (
-                        <>
-                          <span>•</span>
-                          <span>{formatGradYear(match.user.gradYear)}</span>
-                        </>
-                      )}
                     </div>
 
                     <p className={`text-xs truncate mt-1 ${match.unread ? 'font-bold text-[#FFFFFF]' : 'text-[#4A4A4A]'}`}>

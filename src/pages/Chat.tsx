@@ -25,7 +25,6 @@ import {
   Volume2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatGradYear } from '../utils/formatters';
 import { Message } from '../types';
 
 const ICEBREAKERS = [
@@ -181,7 +180,7 @@ export const Chat: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-sm font-extrabold text-[#FFFFFF] group-hover:text-[#C9A84C] transition-colors">
+              <h3 className="text-sm font-extrabold text-[#FFFFFF] group-hover:text-[#C9A84C] transition-colors font-serif">
                 {activeMatch.name}
               </h3>
               <p className="text-[10px] text-[#A0A0A0] font-semibold">
@@ -323,7 +322,7 @@ export const Chat: React.FC = () => {
               <div className="px-4 py-3 bg-[#333333] border-b border-[#4A4A4A] flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#C9A84C] shadow-glow-gold" />
-                  <h3 className="text-xs font-extrabold text-[#FFFFFF] uppercase tracking-wider">
+                  <h3 className="text-xs font-extrabold text-[#FFFFFF] uppercase tracking-wider font-serif">
                     {activeMatch.name}'s Profile
                   </h3>
                 </div>
@@ -374,12 +373,12 @@ export const Chat: React.FC = () => {
 
                   {/* Overlay Gradient Name Info */}
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A]/60 to-transparent p-4 flex flex-col justify-end">
-                    <h2 className="text-2xl font-extrabold text-[#FFFFFF]">
+                    <h2 className="text-2xl font-extrabold text-[#FFFFFF] font-serif">
                       {matchUser.name}, <span className="text-[#C9A84C]">{matchUser.age}</span>
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-[#C9A84C] font-bold mt-0.5">
                       <GraduationCap className="w-4 h-4" />
-                      <span>{matchUser.major} {matchUser.gradYear ? `• ${formatGradYear(matchUser.gradYear)}` : ''}</span>
+                      <span>{matchUser.major}</span>
                     </div>
                   </div>
                 </div>

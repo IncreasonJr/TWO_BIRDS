@@ -16,7 +16,7 @@ export const TopNavbar: React.FC = () => {
             alt="Two Birds Logo"
             className="h-8 w-8 object-cover rounded-xl shadow-glow-gold border border-[#C9A84C]/30"
           />
-          <span className="font-extrabold text-xl tracking-tight text-[#FFFFFF]">
+          <span className="font-serif font-extrabold text-xl tracking-tight text-[#FFFFFF]">
             Two Birds
           </span>
         </div>
@@ -33,7 +33,7 @@ export const TopNavbar: React.FC = () => {
           alt="Two Birds Logo"
           className="h-8 w-8 object-cover rounded-xl shadow-glow-gold border border-[#C9A84C]/30"
         />
-        <span className="font-extrabold text-xl tracking-tight text-[#FFFFFF]">
+        <span className="font-serif font-extrabold text-xl tracking-tight text-[#FFFFFF]">
           Two Birds
         </span>
       </div>

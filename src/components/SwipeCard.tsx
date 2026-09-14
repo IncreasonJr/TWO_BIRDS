@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
-import { formatGradYear, formatDistance, getZodiacEmoji } from '../utils/formatters';
-import { MapPin, GraduationCap, Info, X, Music, Sparkles, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { formatDistance, getZodiacEmoji } from '../utils/formatters';
+import { MapPin, GraduationCap, Info, X, Music, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SwipeCardProps {
   profile: UserProfile;
@@ -156,9 +156,6 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
               <div className="flex items-center gap-1.5">
                 <GraduationCap className="w-4 h-4 text-[#C9A84C]" />
                 <span>{profile.major}</span>
-                <span className="text-[#C9A84C] font-bold">
-                  {profile.year ? `• ${profile.year}` : formatGradYear(profile.gradYear)}
-                </span>
               </div>
             </div>
 
@@ -207,10 +204,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
               {/* Top Handle / Close Button */}
               <div className="flex items-center justify-between border-b border-[#4A4A4A] pb-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-extrabold text-[#FFFFFF]">{profile.name}, {profile.age}</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] font-bold border border-[#C9A84C]/40">
-                    {profile.year || 'Student'}
-                  </span>
+                  <h3 className="text-xl font-extrabold text-[#FFFFFF] font-serif">{profile.name}, {profile.age}</h3>
                 </div>
                 <button
                   onClick={() => setShowInfoModal(false)}
@@ -250,16 +244,12 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
                     <GraduationCap className="w-4 h-4 text-[#C9A84C]" />
                     <span>{profile.major}</span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-[#C9A84C] font-medium">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> Class of {profile.gradYear}
-                    </span>
-                    {profile.dormOrCampus && (
-                      <span className="flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" /> {profile.dormOrCampus}
-                      </span>
-                    )}
-                  </div>
+                  {profile.dormOrCampus && (
+                    <div className="flex items-center gap-1 text-xs text-[#C9A84C] font-medium">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{profile.dormOrCampus}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* About Me Bio */}

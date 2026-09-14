@@ -74,7 +74,7 @@ export const Home: React.FC = () => {
               <Sparkles className="w-8 h-8 text-[#C9A84C]" />
             </div>
             <div>
-              <h3 className="text-xl font-extrabold text-[#FFFFFF]">That's everyone for now!</h3>
+              <h3 className="text-xl font-extrabold text-[#FFFFFF] font-serif">That's everyone for now!</h3>
               <p className="text-xs text-[#FFFFFF]/70 max-w-xs mt-1">
                 You've seen all available student profiles on Two Birds. Check back later or restart your feed!
               </p>
@@ -123,7 +123,7 @@ export const Home: React.FC = () => {
               </motion.div>
 
               <div>
-                <h2 className="text-3xl font-extrabold text-[#C9A84C] tracking-tight">
+                <h2 className="text-3xl font-extrabold text-[#C9A84C] tracking-tight font-serif">
                   It's a Match!
                 </h2>
                 <p className="text-xs text-[#FFFFFF]/80 mt-1.5 font-medium">

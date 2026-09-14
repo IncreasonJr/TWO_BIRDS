@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { useMatches } from '../hooks/useMatches';
@@ -19,7 +20,8 @@ import {
   AlertCircle,
   Download,
   RefreshCw,
-  RotateCcw
+  RotateCcw,
+  FileText
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -44,8 +46,6 @@ const AVAILABLE_INTERESTS = [
   "Gaming"
 ];
 
-const YEAR_OPTIONS = ["Freshman", "Sophomore", "Junior", "Senior", "Grad Student"] as const;
-
 export const Profile: React.FC = () => {
   const {
     currentUser,
@@ -58,6 +58,7 @@ export const Profile: React.FC = () => {
   } = useUser();
 
   const { matches } = useMatches();
+  const navigate = useNavigate();
 
   // Modal & Toast States
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
@@ -231,11 +232,11 @@ export const Profile: React.FC = () => {
 
         {/* User Info */}
         <div className="space-y-0.5 z-10">
-          <h1 className="text-xl font-extrabold text-[#FFFFFF] tracking-tight">
+          <h1 className="text-xl font-extrabold text-[#FFFFFF] tracking-tight font-serif">
             {currentUser.name}, <span className="font-bold text-[#C9A84C]">{currentUser.age}</span>
           </h1>
           <p className="text-xs font-semibold text-[#A0A0A0]">
-            {currentUser.major} • <span className="text-[#FFFFFF]">{currentUser.year}</span>
+            {currentUser.major}
           </p>
           <p className="text-[11px] text-[#A0A0A0] font-medium pt-0.5">
             {currentUser.email}
@@ -449,6 +450,47 @@ export const Profile: React.FC = () => {
         </div>
       </div>
 
+      {/* Legal Section */}
+      <div className="space-y-2 shrink-0">
+        <h3 className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider px-1">Legal</h3>
+
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl overflow-hidden divide-y divide-[#4A4A4A] shadow-md">
+          {/* Privacy Policy */}
+          <button
+            onClick={() => navigate('/privacy')}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <Shield className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Privacy Policy</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">How we protect & respect your data</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </button>
+
+          {/* Terms of Service */}
+          <button
+            onClick={() => navigate('/terms')}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Terms of Service</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Community guidelines & user agreement</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </button>
+        </div>
+      </div>
+
       {/* 3. PHOTO UPLOADING SIMULATION OVERLAY */}
       <AnimatePresence>
         {isUploading && (
@@ -497,7 +539,7 @@ export const Profile: React.FC = () => {
               <div className="px-5 py-4 border-b border-[#4A4A4A] flex items-center justify-between bg-[#1A1A1A]">
                 <div className="flex items-center gap-2">
                   <Edit3 className="w-4 h-4 text-[#C9A84C]" />
-                  <h2 className="text-base font-extrabold text-[#FFFFFF]">Edit Profile</h2>
+                  <h2 className="text-base font-extrabold text-[#FFFFFF] font-serif">Edit Profile</h2>
                 </div>
                 <button
                   onClick={() => setIsEditorOpen(false)}
@@ -531,33 +573,16 @@ export const Profile: React.FC = () => {
                   )}
                 </div>
 
-                {/* Major & Year Grid */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-[#FFFFFF] mb-1">Major</label>
-                    <input
-                      type="text"
-                      value={formMajor}
-                      onChange={(e) => setFormMajor(e.target.value)}
-                      className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
-                      placeholder="e.g. Computer Science"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block font-bold text-[#FFFFFF] mb-1">Year</label>
-                    <select
-                      value={formYear}
-                      onChange={(e) => setFormYear(e.target.value)}
-                      className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
-                    >
-                      {YEAR_OPTIONS.map((yr) => (
-                        <option key={yr} value={yr}>
-                          {yr}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Major Input */}
+                <div>
+                  <label className="block font-bold text-[#FFFFFF] mb-1">Major</label>
+                  <input
+                    type="text"
+                    value={formMajor}
+                    onChange={(e) => setFormMajor(e.target.value)}
+                    className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
+                    placeholder="e.g. Computer Science"
+                  />
                 </div>
 
                 {/* Bio */}
@@ -660,7 +685,7 @@ export const Profile: React.FC = () => {
               </div>
 
               <div>
-                <h3 className="text-lg font-extrabold text-[#FFFFFF]">{activePlaceholderModal}</h3>
+                <h3 className="text-lg font-extrabold text-[#FFFFFF] font-serif">{activePlaceholderModal}</h3>
                 <p className="text-xs text-[#A0A0A0] mt-1.5 leading-relaxed font-medium">
                   {activePlaceholderModal === 'Logout'
                     ? 'Are you sure you want to sign out of your account on Two Birds?'

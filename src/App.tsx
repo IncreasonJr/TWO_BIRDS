@@ -7,6 +7,8 @@ import { Home } from './pages/Home';
 import { Matches } from './pages/Matches';
 import { Chat } from './pages/Chat';
 import { Profile } from './pages/Profile';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { TermsOfService } from './pages/TermsOfService';
 import { NotFound } from './pages/NotFound';
 import { MatchProvider, useMatches } from './hooks/useMatches';
 import { UserProvider } from './context/UserContext';
@@ -27,6 +29,8 @@ const AppContent: React.FC = () => {
             <Route path="/matches" element={<Matches />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
