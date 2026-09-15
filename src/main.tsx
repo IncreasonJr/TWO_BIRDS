@@ -8,7 +8,16 @@ const CURRENT_VERSION = typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_
 
 // Check server version on application boot to detect deployment changes
 const checkVersionAndEvictStaleCache = async () => {
-  if (CURRENT_VERSION === 'dev') return;
+  // In development, skip version check entirely to avoid reload loops
+  if (import.meta.env.DEV || CURRENT_VERSION === 'dev') return;
+
+  // Session throttle: prevent rapid consecutive reloads (must be at least 15s apart)
+  const lastReload = sessionStorage.getItem('last_version_reload');
+  if (lastReload && Date.now() - Number(lastReload) < 15000) {
+    console.warn('[Version Check] Throttling reload loop.');
+    return;
+  }
+
   try {
     const res = await fetch(`/version.json?t=${Date.now()}`, {
       cache: 'no-store',
@@ -16,8 +25,10 @@ const checkVersionAndEvictStaleCache = async () => {
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.version && data.version !== CURRENT_VERSION) {
+      if (data.version && data.version !== 'dev' && data.version !== CURRENT_VERSION) {
         console.warn(`[Version Check] New version detected! Server: ${data.version}, Local: ${CURRENT_VERSION}. Purging caches...`);
+        sessionStorage.setItem('last_version_reload', String(Date.now()));
+
         if ('serviceWorker' in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
           for (const registration of registrations) {
@@ -46,8 +57,21 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>,
 );
 
-// Register Service Worker for PWA functionality & robust update management
-if ('serviceWorker' in navigator) {
+// In development mode, unregister any lingering service workers from previous runs
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    for (const registration of registrations) {
+      registration.unregister().then((unregistered) => {
+        if (unregistered) {
+          console.log('[PWA] Unregistered lingering ServiceWorker in dev mode:', registration.scope);
+        }
+      });
+    }
+  });
+}
+
+// In production mode, register Service Worker for PWA functionality & update management
+if (!import.meta.env.DEV && 'serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     // Execute version check first
     await checkVersionAndEvictStaleCache();
@@ -104,7 +128,13 @@ if ('serviceWorker' in navigator) {
   let refreshing = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (!refreshing) {
+      const lastSwReload = sessionStorage.getItem('last_sw_reload');
+      if (lastSwReload && Date.now() - Number(lastSwReload) < 15000) {
+        console.warn('[PWA] Throttling controllerchange reload.');
+        return;
+      }
       refreshing = true;
+      sessionStorage.setItem('last_sw_reload', String(Date.now()));
       console.log('[PWA] Service worker controller changed. Reloading app...');
       window.location.reload();
     }

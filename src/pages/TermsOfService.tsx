@@ -60,10 +60,10 @@ export const TermsOfService: React.FC = () => {
         {/* 2. Eligibility */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>2. Eligibility (18+ Only)</span>
+            <span>2. Eligibility & Student Verification</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You must be at least <strong className="text-[#FFFFFF]">18 years old</strong> and an active student or affiliate of an accredited college or university to register. By registering, you warrant that you meet these criteria and possess the legal capacity to enter into this agreement.
+            You must be at least <strong className="text-[#FFFFFF]">18 years old</strong> and register with a valid, official university email address ending in <strong className="text-[#C9A84C]">.edu</strong>. Two Birds is exclusively for verified university students. Accounts created without an active, verified .edu email address or found to belong to non-students will be permanently removed.
           </p>
         </div>
 
@@ -73,7 +73,7 @@ export const TermsOfService: React.FC = () => {
             <span>3. User Accounts & Verification</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to provide accurate, current, and complete information, including a valid university email address (.edu) for campus verification.
+            You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to provide accurate, current, and complete registration information. You are required to maintain a valid, active .edu university email address associated with your account at all times.
           </p>
         </div>
 

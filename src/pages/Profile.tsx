@@ -21,7 +21,8 @@ import {
   Download,
   RefreshCw,
   RotateCcw,
-  FileText
+  FileText,
+  School
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -54,7 +55,8 @@ export const Profile: React.FC = () => {
     totalSwipes,
     completionPercentage,
     updateProfile,
-    uploadPhoto
+    uploadPhoto,
+    logout
   } = useUser();
 
   const { matches } = useMatches();
@@ -68,6 +70,7 @@ export const Profile: React.FC = () => {
 
   // Form State
   const [formName, setFormName] = useState<string>(currentUser.name);
+  const [formUniversity, setFormUniversity] = useState<string>(currentUser.university || 'Stanford University');
   const [formMajor, setFormMajor] = useState<string>(currentUser.major);
   const [formYear, setFormYear] = useState<string>(currentUser.year || 'Junior');
   const [formBio, setFormBio] = useState<string>(currentUser.bio);
@@ -78,6 +81,7 @@ export const Profile: React.FC = () => {
 
   const handleOpenEditor = () => {
     setFormName(currentUser.name);
+    setFormUniversity(currentUser.university || 'Stanford University');
     setFormMajor(currentUser.major);
     setFormYear(currentUser.year || 'Junior');
     setFormBio(currentUser.bio);
@@ -118,6 +122,7 @@ export const Profile: React.FC = () => {
 
     updateProfile({
       name: formName.trim(),
+      university: formUniversity.trim() || 'Stanford University',
       major: formMajor.trim(),
       year: formYear as any,
       bio: formBio.trim(),
@@ -238,6 +243,12 @@ export const Profile: React.FC = () => {
           <p className="text-xs font-semibold text-[#A0A0A0]">
             {currentUser.major}
           </p>
+          {currentUser.university && (
+            <p className="text-[11px] font-semibold text-[#C9A84C] flex items-center justify-center gap-1.5 pt-0.5">
+              <School className="w-3.5 h-3.5" />
+              <span>{currentUser.university}</span>
+            </p>
+          )}
           <p className="text-[11px] text-[#A0A0A0] font-medium pt-0.5">
             {currentUser.email}
           </p>
@@ -585,6 +596,18 @@ export const Profile: React.FC = () => {
                   />
                 </div>
 
+                {/* University Input */}
+                <div>
+                  <label className="block font-bold text-[#FFFFFF] mb-1">University Name</label>
+                  <input
+                    type="text"
+                    value={formUniversity}
+                    onChange={(e) => setFormUniversity(e.target.value)}
+                    className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
+                    placeholder="e.g. Stanford University"
+                  />
+                </div>
+
                 {/* Bio */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
@@ -698,7 +721,8 @@ export const Profile: React.FC = () => {
                   <button
                     onClick={() => {
                       setActivePlaceholderModal(null);
-                      triggerToast('Signed out successfully (Simulated)');
+                      logout();
+                      navigate('/signup');
                     }}
                     className="w-full py-2.5 rounded-2xl bg-red-500 text-[#FFFFFF] font-extrabold text-xs shadow-md"
                   >

@@ -14,10 +14,9 @@ import {
   X,
   GraduationCap,
   Award,
-  MapPin,
+  School,
   Compass,
   Disc,
-  Home as HomeIcon,
   ChevronLeft,
   ChevronRight,
   Play,
@@ -440,17 +439,12 @@ export const Chat: React.FC = () => {
                     </div>
                   )}
 
-                  {matchUser.dormOrCampus && (
+                  {matchUser.university && (
                     <div className="bg-[#333333] border border-[#4A4A4A] p-3 rounded-2xl flex items-center gap-2.5 text-xs text-[#FFFFFF] font-bold">
-                      <HomeIcon className="w-4 h-4 text-[#C9A84C]" />
-                      <span className="truncate">{matchUser.dormOrCampus}</span>
+                      <School className="w-4 h-4 text-[#C9A84C]" />
+                      <span className="truncate">{matchUser.university}</span>
                     </div>
                   )}
-
-                  <div className="bg-[#333333] border border-[#4A4A4A] p-3 rounded-2xl flex items-center gap-2.5 text-xs text-[#FFFFFF] font-bold">
-                    <MapPin className="w-4 h-4 text-[#C9A84C]" />
-                    <span>0.5 miles away</span>
-                  </div>
                 </div>
               </div>
 

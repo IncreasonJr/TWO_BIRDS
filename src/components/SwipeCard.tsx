@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
-import { formatDistance, getZodiacEmoji } from '../utils/formatters';
-import { MapPin, GraduationCap, Info, X, Music, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getZodiacEmoji } from '../utils/formatters';
+import { GraduationCap, Info, X, Music, School, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SwipeCardProps {
   profile: UserProfile;
@@ -159,18 +159,12 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
               </div>
             </div>
 
-            <div className="flex items-center gap-3.5 text-[#FFFFFF]/90 text-xs font-medium">
-              <div className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-[#C9A84C]" />
-                <span>{formatDistance(profile.distanceMiles)}</span>
+            {profile.university && (
+              <div className="flex items-center gap-1.5 text-[#FFFFFF]/90 text-xs font-medium">
+                <School className="w-3.5 h-3.5 text-[#C9A84C]" />
+                <span>{profile.university}</span>
               </div>
-              {profile.dormOrCampus && (
-                <div className="flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-[#C9A84C]" />
-                  <span>{profile.dormOrCampus}</span>
-                </div>
-              )}
-            </div>
+            )}
 
             <p className="text-[#FFFFFF] text-xs font-medium line-clamp-2 leading-relaxed drop-shadow-sm px-0.5">
               "{profile.bio}"
@@ -238,16 +232,16 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
 
               {/* Detail Content */}
               <div className="space-y-4 text-xs">
-                {/* Major & Campus */}
+                {/* Major & University */}
                 <div className="bg-[#333333] border border-[#4A4A4A] p-4 rounded-2xl space-y-2">
                   <div className="flex items-center gap-2 text-sm font-bold text-[#FFFFFF]">
                     <GraduationCap className="w-4 h-4 text-[#C9A84C]" />
                     <span>{profile.major}</span>
                   </div>
-                  {profile.dormOrCampus && (
-                    <div className="flex items-center gap-1 text-xs text-[#C9A84C] font-medium">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>{profile.dormOrCampus}</span>
+                  {profile.university && (
+                    <div className="flex items-center gap-1.5 text-xs text-[#C9A84C] font-semibold">
+                      <School className="w-3.5 h-3.5" />
+                      <span>{profile.university}</span>
                     </div>
                   )}
                 </div>

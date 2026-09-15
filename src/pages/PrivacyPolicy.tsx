@@ -66,10 +66,10 @@ export const PrivacyPolicy: React.FC = () => {
             To provide genuine, verified university connections, we collect the following categories of information:
           </p>
           <ul className="space-y-1.5 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1 font-normal">
-            <li><strong className="text-[#FFFFFF]">Profile Information:</strong> Name, university email (.edu), age, gender identity, major, campus/dorm affiliation, bio, and interests.</li>
-            <li><strong className="text-[#FFFFFF]">Photos & Media:</strong> Images and audio voice notes you upload to your profile or send in chats.</li>
-            <li><strong className="text-[#FFFFFF]">Campus Location:</strong> Approximate distance and campus proximity to help discover students nearby. We do not broadcast your exact real-time GPS coordinates.</li>
-            <li><strong className="text-[#FFFFFF]">Usage & Activity:</strong> Swipe decisions (likes, passes), matches made, messaging timestamps, and app interaction data.</li>
+            <li><strong className="text-[#FFFFFF]">University (.edu) Email & Verification:</strong> We collect your official .edu university email address strictly for student verification to confirm active university enrollment. Your .edu email confirms your student status, is never shared with or displayed to other users on the platform, and is never sold to third parties or advertisers.</li>
+            <li><strong className="text-[#FFFFFF]">Profile Information:</strong> Full name, university name, age, gender identity, major/academic focus, bio, and student interests.</li>
+            <li><strong className="text-[#FFFFFF]">Photos & Media:</strong> Images and audio voice notes you choose to upload to your profile or share in direct match chats.</li>
+            <li><strong className="text-[#FFFFFF]">Usage & Activity:</strong> Swipe decisions (likes, passes), matches formed, messaging timestamps, and app interaction data.</li>
           </ul>
         </div>
 

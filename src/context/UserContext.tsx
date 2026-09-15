@@ -1,9 +1,22 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { UserProfile } from '../types';
 import { INITIAL_CURRENT_USER } from '../data/currentUser';
+import { MOCK_PROFILES } from '../data/mockUsers';
+import { isValidEduEmail } from '../utils/validation';
+
+export interface SignupData {
+  name: string;
+  email: string;
+  university: string;
+  major: string;
+  age?: number;
+  gender?: string;
+  bio?: string;
+}
 
 interface UserContextType {
   currentUser: UserProfile;
+  isAuthenticated: boolean;
   isUploading: boolean;
   uploadProgress: number;
   totalSwipes: number;
@@ -11,12 +24,16 @@ interface UserContextType {
   updateProfile: (data: Partial<UserProfile>) => void;
   uploadPhoto: (file: File) => void;
   incrementSwipes: () => void;
+  signup: (data: SignupData) => { success: boolean; error?: string };
+  login: (email: string) => { success: boolean; error?: string };
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_CURRENT_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [totalSwipes, setTotalSwipes] = useState<number>(14); // baseline mock swipes count
@@ -78,10 +95,78 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTotalSwipes((prev) => prev + 1);
   }, []);
 
+  const signup = useCallback((data: SignupData) => {
+    if (!isValidEduEmail(data.email)) {
+      return {
+        success: false,
+        error: 'Please use a valid university email (.edu) to sign up',
+      };
+    }
+
+    const newUser: UserProfile = {
+      id: `user-${Date.now()}`,
+      uid: `user-${Date.now()}`,
+      name: data.name.trim(),
+      email: data.email.trim().toLowerCase(),
+      university: data.university.trim() || 'Stanford University',
+      major: data.major.trim() || 'Undecided',
+      age: data.age || 21,
+      gender: data.gender || 'Other',
+      bio: data.bio?.trim() || 'Excited to connect with fellow students on campus!',
+      photos: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
+      ],
+      interests: ['Campus Life', 'Coffee', 'Study Groups'],
+      verifiedCampus: true,
+      distanceMiles: 0,
+      location: { latitude: 37.4275, longitude: -122.1697 },
+      onlineStatus: 'online',
+      lastActive: new Date(),
+      gradYear: 2026,
+      createdAt: new Date().toISOString(),
+    };
+
+    setCurrentUser(newUser);
+    setIsAuthenticated(true);
+    return { success: true };
+  }, []);
+
+  const login = useCallback((email: string) => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed) {
+      return { success: false, error: 'Please enter your email address' };
+    }
+    // Check if matching current user
+    if (trimmed === currentUser.email.toLowerCase()) {
+      setIsAuthenticated(true);
+      return { success: true };
+    }
+    // Check mock users without blocking non-.edu
+    const foundMock = MOCK_PROFILES.find((p) => p.email.toLowerCase() === trimmed);
+    if (foundMock) {
+      setCurrentUser(foundMock);
+      setIsAuthenticated(true);
+      return { success: true };
+    }
+    // General login fallback for existing users
+    setCurrentUser((prev) => ({
+      ...prev,
+      email: trimmed,
+    }));
+    setIsAuthenticated(true);
+    return { success: true };
+  }, [currentUser]);
+
+  const logout = useCallback(() => {
+    setIsAuthenticated(false);
+  }, []);
+
   return (
     <UserContext.Provider
       value={{
         currentUser,
+        isAuthenticated,
         isUploading,
         uploadProgress,
         totalSwipes,
@@ -89,6 +174,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         uploadPhoto,
         incrementSwipes,
+        signup,
+        login,
+        logout,
       }}
     >
       {children}
