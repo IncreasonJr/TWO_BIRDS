@@ -1,4 +1,4 @@
-import { Match, Message } from '../types';
+import { Match } from '../types';
 import { MOCK_PROFILES } from './mockUsers';
 
 export const MOCK_MATCHES: Match[] = [

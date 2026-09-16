@@ -21,7 +21,7 @@ interface MatchContextType {
   setActiveMatchId: (id: string) => void;
   createMatch: (user: UserProfile) => Match;
   handleSendMessage: (text: string) => void;
-  handleSendMessageFrom: (senderId: string, text: string) => void;
+  handleSendMessageFrom: (senderId: string, text: string, targetMatchId?: string) => void;
   handleSendVoiceNote: (audioUrl: string, duration: string) => void;
   setTypingStatus: (matchId: string, isTyping: boolean) => void;
   isMatchTyping: (matchId: string) => boolean;
@@ -99,16 +99,22 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return newMatchObj;
   }, [matches]);
 
-  const handleSendMessageFrom = useCallback((senderId: string, text: string) => {
-    if (!activeMatch || !text.trim()) return;
+  const handleSendMessageFrom = useCallback((senderId: string, text: string, targetMatchId?: string) => {
+    if (!text.trim()) return;
+
+    const matchToUse = targetMatchId
+      ? matches.find((m) => m.id === targetMatchId) || activeMatch
+      : activeMatch;
+
+    if (!matchToUse) return;
 
     const isCurrentUserSender = senderId === 'current-user';
-    const receiverId = isCurrentUserSender ? activeMatch.userId : 'current-user';
+    const receiverId = isCurrentUserSender ? matchToUse.userId : 'current-user';
 
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
-      matchId: activeMatch.id,
+      matchId: matchToUse.id,
       senderId: senderId,
       receiverId: receiverId,
       text: text.trim(),
@@ -119,7 +125,7 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setMatches((prev) =>
       prev.map((m) => {
-        if (m.id === activeMatch.id) {
+        if (m.id === matchToUse.id) {
           return {
             ...m,
             lastMessage: text.trim(),
@@ -130,17 +136,19 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return m;
       })
     );
-  }, [activeMatch]);
+  }, [activeMatch, matches]);
 
   const handleSendVoiceNote = useCallback((audioUrl: string, duration: string) => {
     if (!activeMatch) return;
 
+    const matchId = activeMatch.id;
+    const matchUserId = activeMatch.userId;
     const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const voiceMessage: Message = {
       id: `voice-${Date.now()}`,
-      matchId: activeMatch.id,
+      matchId: matchId,
       senderId: 'current-user',
-      receiverId: activeMatch.userId,
+      receiverId: matchUserId,
       text: `🎤 Voice note (${duration})`,
       timestamp: timeString,
       isRead: true,
@@ -151,7 +159,7 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setMatches((prev) =>
       prev.map((m) => {
-        if (m.id === activeMatch.id) {
+        if (m.id === matchId) {
           return {
             ...m,
             lastMessage: `🎤 Voice note (${duration})`,
@@ -164,8 +172,6 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     // Trigger typing indicator for active match
-    const matchId = activeMatch.id;
-    const matchUserId = activeMatch.userId;
     setTypingStatus(matchId, true);
 
     const randomDelay = Math.floor(Math.random() * 1500) + 1500; // 1.5 - 3 seconds
@@ -173,18 +179,18 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTimeout(() => {
       setTypingStatus(matchId, false);
       const replyText = "Loved your voice note! 🎧";
-      handleSendMessageFrom(matchUserId, replyText);
+      handleSendMessageFrom(matchUserId, replyText, matchId);
     }, randomDelay);
   }, [activeMatch, handleSendMessageFrom, setTypingStatus]);
 
   const handleSendMessage = useCallback((text: string) => {
     if (!activeMatch || !text.trim()) return;
 
-    handleSendMessageFrom('current-user', text);
-
-    // Trigger typing indicator for active match
     const matchId = activeMatch.id;
     const matchUserId = activeMatch.userId;
+    handleSendMessageFrom('current-user', text, matchId);
+
+    // Trigger typing indicator for active match
     setTypingStatus(matchId, true);
 
     const randomDelay = Math.floor(Math.random() * 1500) + 1500; // 1.5 - 3 seconds
@@ -192,7 +198,7 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setTimeout(() => {
       setTypingStatus(matchId, false);
       const replyText = AUTO_RESPONSES[Math.floor(Math.random() * AUTO_RESPONSES.length)];
-      handleSendMessageFrom(matchUserId, replyText);
+      handleSendMessageFrom(matchUserId, replyText, matchId);
     }, randomDelay);
   }, [activeMatch, handleSendMessageFrom, setTypingStatus]);
 

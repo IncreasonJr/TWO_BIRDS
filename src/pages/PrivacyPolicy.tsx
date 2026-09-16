@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Shield, Lock, Eye, FileText, UserCheck, AlertCircle, Mail } from 'lucide-react';
+import { ChevronLeft, Shield, Mail } from 'lucide-react';
 
 export const PrivacyPolicy: React.FC = () => {
   const navigate = useNavigate();

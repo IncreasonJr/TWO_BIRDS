@@ -70,7 +70,7 @@ export const Matches: React.FC = () => {
                 >
                   <div className="relative p-0.5 rounded-full bg-[#C9A84C] shadow-glow-gold group-hover:scale-105 transition-transform duration-300">
                     <img
-                      src={match.photos[0] || match.user.photos[0]}
+                      src={match.photos?.[0] || match.user?.photos?.[0] || '/logo192.png'}
                       alt={match.name}
                       className="w-14 h-14 rounded-full object-cover border-2 border-[#1A1A1A]"
                     />
@@ -98,7 +98,7 @@ export const Matches: React.FC = () => {
                 >
                   <div className="relative flex-shrink-0">
                     <img
-                      src={match.photos[0] || match.user.photos[0]}
+                      src={match.photos?.[0] || match.user?.photos?.[0] || '/logo192.png'}
                       alt={match.name}
                       className="w-12 h-12 rounded-2xl object-cover border border-[#4A4A4A]"
                     />

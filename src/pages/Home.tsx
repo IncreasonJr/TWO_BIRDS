@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipe } from '../hooks/useSwipe';
 import { useMatches } from '../hooks/useMatches';
+import { useUser } from '../context/UserContext';
 import { SwipeCard } from '../components/SwipeCard';
 import { SwipeControls } from '../components/SwipeControls';
 import { Heart, Sparkles, MessageCircle, RefreshCw } from 'lucide-react';
@@ -22,7 +23,13 @@ export const Home: React.FC = () => {
   } = useSwipe();
 
   const { createMatch } = useMatches();
+  const { currentUser, incrementSwipes } = useUser();
   const navigate = useNavigate();
+
+  const onSwipeAction = (direction: 'left' | 'right') => {
+    incrementSwipes();
+    handleSwipe(direction);
+  };
 
   // Auto-dismiss match modal after 3 seconds if not clicked
   useEffect(() => {
@@ -63,7 +70,7 @@ export const Home: React.FC = () => {
             <SwipeCard
               key={currentProfile.id}
               profile={currentProfile}
-              onSwipe={handleSwipe}
+              onSwipe={onSwipeAction}
               isFront={true}
               depth={0}
             />
@@ -94,8 +101,8 @@ export const Home: React.FC = () => {
       <SwipeControls
         onRewind={rewind}
         canRewind={canRewind}
-        onPass={() => handleSwipe('left')}
-        onLike={() => handleSwipe('right')}
+        onPass={() => onSwipeAction('left')}
+        onLike={() => onSwipeAction('right')}
         disabled={!hasMore}
       />
 
@@ -139,7 +146,11 @@ export const Home: React.FC = () => {
                   transition={{ delay: 0.2 }}
                   className="w-20 h-20 rounded-full border-4 border-[#333333] overflow-hidden shadow-lg"
                 >
-                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80" alt="You" className="w-full h-full object-cover" />
+                  <img
+                    src={currentUser.photos?.[0] || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"}
+                    alt={currentUser.name || "You"}
+                    className="w-full h-full object-cover"
+                  />
                 </motion.div>
                 
                 <div className="z-20 p-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] shadow-glow-gold border-2 border-[#1A1A1A]">
@@ -152,7 +163,11 @@ export const Home: React.FC = () => {
                   transition={{ delay: 0.2 }}
                   className="w-20 h-20 rounded-full border-4 border-[#333333] overflow-hidden shadow-glow-gold z-10"
                 >
-                  <img src={newMatch.photos[0]} alt={newMatch.name} className="w-full h-full object-cover" />
+                  <img
+                    src={newMatch.photos?.[0] || '/logo192.png'}
+                    alt={newMatch.name}
+                    className="w-full h-full object-cover"
+                  />
                 </motion.div>
               </div>
 

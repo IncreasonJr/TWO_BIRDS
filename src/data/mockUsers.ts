@@ -1,4 +1,4 @@
-import { UserProfile, Match, Message } from '../types';
+import { UserProfile } from '../types';
 
 export const MOCK_CURRENT_USER: UserProfile = {
   id: 'current-user',

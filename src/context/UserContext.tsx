@@ -32,11 +32,58 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_CURRENT_USER);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('twobirds_current_user');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Failed to load user from localStorage', e);
+    }
+    return INITIAL_CURRENT_USER;
+  });
+
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('twobirds_auth');
+      if (saved !== null) return saved === 'true';
+    } catch (e) {
+      console.warn('Failed to load auth from localStorage', e);
+    }
+    return true;
+  });
+
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [totalSwipes, setTotalSwipes] = useState<number>(14); // baseline mock swipes count
+  const [totalSwipes, setTotalSwipes] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('twobirds_swipes');
+      if (saved !== null) return Number(saved) || 14;
+    } catch {}
+    return 14;
+  });
+
+  // Persist currentUser and auth state to localStorage
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('twobirds_current_user', JSON.stringify(currentUser));
+    } catch (e) {
+      console.warn('Failed to save user to localStorage', e);
+    }
+  }, [currentUser]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('twobirds_auth', String(isAuthenticated));
+    } catch (e) {
+      console.warn('Failed to save auth to localStorage', e);
+    }
+  }, [isAuthenticated]);
+
+  React.useEffect(() => {
+    try {
+      localStorage.setItem('twobirds_swipes', String(totalSwipes));
+    } catch {}
+  }, [totalSwipes]);
 
   const completionPercentage = useMemo(() => {
     let score = 0;
@@ -160,6 +207,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = useCallback(() => {
     setIsAuthenticated(false);
+    try {
+      localStorage.setItem('twobirds_auth', 'false');
+    } catch {}
   }, []);
 
   return (

@@ -20,6 +20,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
   const [university, setUniversity] = useState('Stanford University');
   const [major, setMajor] = useState('');
   const [age, setAge] = useState<number>(20);
+  const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +50,11 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
+      if (!password || password.length < 6) {
+        setErrorMessage('Password must be at least 6 characters long');
+        return;
+      }
+
       setSubmitting(true);
       const res = signup({
         name,
@@ -68,6 +74,11 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
       // Login mode
       if (!email.trim()) {
         setErrorMessage('Please enter your email address');
+        return;
+      }
+
+      if (!password.trim()) {
+        setErrorMessage('Please enter your password');
         return;
       }
 
@@ -178,6 +189,28 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
                 if (errorMessage) setErrorMessage(null);
               }}
               placeholder={mode === 'signup' ? 'yourname@stanford.edu' : 'name@university.edu'}
+              className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Password Field */}
+        <div>
+          <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
+            {mode === 'signup' ? 'Password (min 6 characters) *' : 'Password *'}
+          </label>
+          <div className="relative">
+            <Lock className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                if (errorMessage) setErrorMessage(null);
+              }}
+              placeholder="••••••••"
+              minLength={mode === 'signup' ? 6 : undefined}
               className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
               required
             />

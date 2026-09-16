@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import EmojiPicker, { Theme, EmojiClickData } from 'emoji-picker-react';
-import { Smile, Mic, Send, Square, Volume2 } from 'lucide-react';
+import { Smile, Mic, Send, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatInputProps {
@@ -24,6 +24,22 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<any>(null);
+
+  // Clean up timer and media recorder when unmounting
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, []);
 
   // Auto-resize textarea height
   useEffect(() => {

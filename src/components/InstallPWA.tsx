@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Check, Smartphone, X } from 'lucide-react';
+import { Download, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -13,16 +13,13 @@ interface BeforeInstallPromptEvent extends Event {
 
 export const InstallPWA: React.FC<{ variant?: 'banner' | 'button' | 'compact' }> = ({ variant = 'compact' }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState<boolean>(false);
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(display-mode: standalone)').matches || !!(navigator as any).standalone;
+  });
   const [showBanner, setShowBanner] = useState<boolean>(true);
-  const [installSuccess, setInstallSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if already in standalone mode
-    if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
-      setIsInstalled(true);
-    }
-
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -31,8 +28,6 @@ export const InstallPWA: React.FC<{ variant?: 'banner' | 'button' | 'compact' }>
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
-      setInstallSuccess(true);
-      setTimeout(() => setInstallSuccess(false), 4000);
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Scale, Mail } from 'lucide-react';
+import { ChevronLeft, Scale, Mail } from 'lucide-react';
 
 export const TermsOfService: React.FC = () => {
   const navigate = useNavigate();
