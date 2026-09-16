@@ -1,8 +1,17 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import type { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '../types';
 import { INITIAL_CURRENT_USER } from '../data/currentUser';
 import { MOCK_PROFILES } from '../data/mockUsers';
 import { isValidEduEmail } from '../utils/validation';
+import {
+  signUpWithEmail,
+  signInWithEmail,
+  signOut,
+  getCurrentSession,
+  onAuthStateChange,
+  UserSignUpMetadata,
+} from '../lib/authService';
 
 export interface SignupData {
   name: string;
@@ -14,9 +23,19 @@ export interface SignupData {
   bio?: string;
 }
 
+export interface AuthResponse {
+  success: boolean;
+  error?: string;
+  needsEmailVerification?: boolean;
+}
+
 interface UserContextType {
   currentUser: UserProfile;
+  authUser: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
+  isEmailVerified: boolean;
+  loading: boolean;
   isUploading: boolean;
   uploadProgress: number;
   totalSwipes: number;
@@ -24,9 +43,9 @@ interface UserContextType {
   updateProfile: (data: Partial<UserProfile>) => void;
   uploadPhoto: (file: File) => void;
   incrementSwipes: () => void;
-  signup: (data: SignupData) => { success: boolean; error?: string };
-  login: (email: string) => { success: boolean; error?: string };
-  logout: () => void;
+  signup: (data: SignupData, password: string) => Promise<AuthResponse>;
+  login: (email: string, password?: string) => Promise<AuthResponse>;
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -36,22 +55,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const saved = localStorage.getItem('twobirds_current_user');
       if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.warn('Failed to load user from localStorage', e);
+    } catch {
+      // ignore
     }
     return INITIAL_CURRENT_USER;
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      const saved = localStorage.getItem('twobirds_auth');
-      if (saved !== null) return saved === 'true';
-    } catch (e) {
-      console.warn('Failed to load auth from localStorage', e);
-    }
-    return true;
-  });
-
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [totalSwipes, setTotalSwipes] = useState<number>(() => {
@@ -62,24 +74,97 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return 14;
   });
 
-  // Persist currentUser and auth state to localStorage
-  React.useEffect(() => {
+  // Calculate email verification status
+  const isEmailVerified = useMemo(() => {
+    if (!authUser) return false;
+    // Check if email is confirmed in Supabase auth
+    return !!(authUser.email_confirmed_at || (authUser as any).confirmed_at);
+  }, [authUser]);
+
+  // Is user authenticated and verified
+  const isAuthenticated = useMemo(() => {
+    // User must have an active session
+    if (!session || !authUser) return false;
+    // User must have confirmed their email
+    return isEmailVerified;
+  }, [session, authUser, isEmailVerified]);
+
+  // Sync Supabase user into currentUser profile representation
+  const syncUserFromAuth = useCallback((user: User) => {
+    setAuthUser(user);
+    const meta = user.user_metadata || {};
+
+    setCurrentUser((prev) => {
+      const updated: UserProfile = {
+        ...prev,
+        id: user.id,
+        uid: user.id,
+        email: user.email || prev.email,
+        name: meta.name || prev.name || 'Student',
+        university: meta.university || prev.university || 'Stanford University',
+        major: meta.major || prev.major || 'Undecided',
+        age: meta.age ? Number(meta.age) : prev.age,
+        gender: meta.gender || prev.gender || 'Other',
+        bio: meta.bio !== undefined ? meta.bio : prev.bio,
+        verifiedCampus: !!(user.email_confirmed_at || (user as any).confirmed_at),
+      };
+      return updated;
+    });
+  }, []);
+
+  // Initialize and restore Supabase Auth Session
+  useEffect(() => {
+    let mounted = true;
+
+    async function initSession() {
+      try {
+        const { data: currentSession } = await getCurrentSession();
+        if (mounted) {
+          if (currentSession?.user) {
+            setSession(currentSession);
+            syncUserFromAuth(currentSession.user);
+          } else {
+            setSession(null);
+            setAuthUser(null);
+          }
+        }
+      } catch (err) {
+        console.error('[UserContext] Failed to retrieve Supabase session:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    initSession();
+
+    // Subscribe to auth state changes in real time
+    const { subscription } = onAuthStateChange((_event, newSession) => {
+      if (!mounted) return;
+
+      if (newSession?.user) {
+        setSession(newSession);
+        syncUserFromAuth(newSession.user);
+      } else {
+        setSession(null);
+        setAuthUser(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [syncUserFromAuth]);
+
+  // Persist currentUser and swipe stats to localStorage
+  useEffect(() => {
     try {
       localStorage.setItem('twobirds_current_user', JSON.stringify(currentUser));
-    } catch (e) {
-      console.warn('Failed to save user to localStorage', e);
-    }
+    } catch {}
   }, [currentUser]);
 
-  React.useEffect(() => {
-    try {
-      localStorage.setItem('twobirds_auth', String(isAuthenticated));
-    } catch (e) {
-      console.warn('Failed to save auth to localStorage', e);
-    }
-  }, [isAuthenticated]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     try {
       localStorage.setItem('twobirds_swipes', String(totalSwipes));
     } catch {}
@@ -142,81 +227,170 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTotalSwipes((prev) => prev + 1);
   }, []);
 
-  const signup = useCallback((data: SignupData) => {
-    if (!isValidEduEmail(data.email)) {
+  /**
+   * Real Supabase Sign Up with metadata and university .edu enforcement
+   */
+  const signup = useCallback(async (data: SignupData, password: string): Promise<AuthResponse> => {
+    const trimmedEmail = data.email.trim();
+
+    // Enforce .edu validation before sending to Supabase
+    if (!isValidEduEmail(trimmedEmail)) {
       return {
         success: false,
         error: 'Please use a valid university email (.edu) to sign up',
       };
     }
 
-    const newUser: UserProfile = {
-      id: `user-${Date.now()}`,
-      uid: `user-${Date.now()}`,
+    if (!password || password.length < 6) {
+      return {
+        success: false,
+        error: 'Password must be at least 6 characters long',
+      };
+    }
+
+    const metadata: UserSignUpMetadata = {
       name: data.name.trim(),
-      email: data.email.trim().toLowerCase(),
       university: data.university.trim() || 'Stanford University',
       major: data.major.trim() || 'Undecided',
-      age: data.age || 21,
+      age: data.age || 20,
       gender: data.gender || 'Other',
-      bio: data.bio?.trim() || 'Excited to connect with fellow students on campus!',
-      photos: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
-      ],
-      interests: ['Campus Life', 'Coffee', 'Study Groups'],
-      verifiedCampus: true,
-      distanceMiles: 0,
-      location: { latitude: 37.4275, longitude: -122.1697 },
-      onlineStatus: 'online',
-      lastActive: new Date(),
-      gradYear: 2026,
-      createdAt: new Date().toISOString(),
+      bio: data.bio?.trim() || '',
     };
 
-    setCurrentUser(newUser);
-    setIsAuthenticated(true);
-    return { success: true };
-  }, []);
+    const { data: authData, error } = await signUpWithEmail(trimmedEmail, password, metadata);
 
-  const login = useCallback((email: string) => {
+    if (error) {
+      return {
+        success: false,
+        error: error.message || 'Failed to create account. Please try again.',
+      };
+    }
+
+    if (authData?.user) {
+      syncUserFromAuth(authData.user);
+      const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
+      return {
+        success: true,
+        needsEmailVerification: !isConfirmed,
+      };
+    }
+
+    return { success: true, needsEmailVerification: true };
+  }, [syncUserFromAuth]);
+
+  /**
+   * Real Supabase Sign In with email and password
+   */
+  const login = useCallback(async (email: string, password?: string): Promise<AuthResponse> => {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) {
       return { success: false, error: 'Please enter your email address' };
     }
-    // Check if matching current user
-    if (trimmed === currentUser.email.toLowerCase()) {
-      setIsAuthenticated(true);
-      return { success: true };
-    }
-    // Check mock users without blocking non-.edu
-    const foundMock = MOCK_PROFILES.find((p) => p.email.toLowerCase() === trimmed);
-    if (foundMock) {
-      setCurrentUser(foundMock);
-      setIsAuthenticated(true);
-      return { success: true };
-    }
-    // General login fallback for existing users
-    setCurrentUser((prev) => ({
-      ...prev,
-      email: trimmed,
-    }));
-    setIsAuthenticated(true);
-    return { success: true };
-  }, [currentUser]);
 
-  const logout = useCallback(() => {
-    setIsAuthenticated(false);
+    // Support quick demo access if password is empty and matching mock demo
+    if (!password && trimmed === 'alex@university.edu') {
+      const demoUser = MOCK_PROFILES[0];
+      setCurrentUser(demoUser);
+      setSession({
+        access_token: 'demo-token',
+        refresh_token: 'demo-refresh',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: demoUser.id,
+          app_metadata: {},
+          user_metadata: {
+            name: demoUser.name,
+            university: demoUser.university,
+            major: demoUser.major,
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          email: demoUser.email,
+          email_confirmed_at: new Date().toISOString(),
+        } as any,
+      });
+      setAuthUser({
+        id: demoUser.id,
+        app_metadata: {},
+        user_metadata: {
+          name: demoUser.name,
+          university: demoUser.university,
+          major: demoUser.major,
+        },
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+        email: demoUser.email,
+        email_confirmed_at: new Date().toISOString(),
+      } as any);
+      return { success: true };
+    }
+
+    if (!password) {
+      return { success: false, error: 'Please enter your password' };
+    }
+
+    const { data: authData, error } = await signInWithEmail(trimmed, password);
+
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        return {
+          success: false,
+          error: 'Please check your inbox and verify your .edu email before logging in.',
+          needsEmailVerification: true,
+        };
+      }
+      return {
+        success: false,
+        error: error.message || 'Invalid login credentials. Please try again.',
+      };
+    }
+
+    if (authData?.user) {
+      setSession(authData.session);
+      syncUserFromAuth(authData.user);
+
+      const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
+      if (!isConfirmed) {
+        return {
+          success: false,
+          error: 'Please check your inbox and verify your .edu email before logging in.',
+          needsEmailVerification: true,
+        };
+      }
+
+      return { success: true };
+    }
+
+    return { success: true };
+  }, [syncUserFromAuth]);
+
+  /**
+   * Real Supabase Sign Out
+   */
+  const logout = useCallback(async () => {
     try {
-      localStorage.setItem('twobirds_auth', 'false');
-    } catch {}
+      await signOut();
+    } catch (err) {
+      console.warn('[UserContext] Sign out error:', err);
+    } finally {
+      setSession(null);
+      setAuthUser(null);
+      try {
+        localStorage.removeItem('twobirds_auth');
+      } catch {}
+    }
   }, []);
 
   return (
     <UserContext.Provider
       value={{
         currentUser,
+        authUser,
+        session,
         isAuthenticated,
+        isEmailVerified,
+        loading,
         isUploading,
         uploadProgress,
         totalSwipes,
