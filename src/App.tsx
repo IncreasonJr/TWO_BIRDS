@@ -14,6 +14,7 @@ import { NotFound } from './pages/NotFound';
 import { MatchProvider, useMatches } from './hooks/useMatches';
 import { useLocation } from 'react-router-dom';
 import { UserProvider, useUser } from './context/UserContext';
+import { supabase } from './lib/supabaseClient';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useUser();
@@ -27,6 +28,17 @@ const AppContent: React.FC = () => {
   const { totalUnread } = useMatches();
   const { isAuthenticated } = useUser();
   const location = useLocation();
+
+  // Test Supabase connection on load
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('[Supabase] Connection error:', error.message);
+      } else {
+        console.log('[Supabase] Connection successful! Session:', data.session);
+      }
+    });
+  }, []);
 
   const isAuthPage = location.pathname === '/signup' || location.pathname === '/login';
   const showNav = !isAuthPage && isAuthenticated;
