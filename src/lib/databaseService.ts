@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient';
 import { UserProfile, Match, Message } from '../types';
+import { filterMessage } from './profanityFilter';
 
 export function mapProfileRowToUserProfile(row: any): UserProfile {
   return {
@@ -55,14 +56,17 @@ export async function getAllProfilesExcept(
   swipedIds: string[] = []
 ): Promise<UserProfile[]> {
   try {
+    const blockedIds = await getAllBlockedRelationIds(userId);
+    const excludedIds = Array.from(new Set([...swipedIds, ...blockedIds]));
+
     let query = supabase
       .from('profiles')
       .select('*')
       .neq('id', userId);
 
-    if (swipedIds.length > 0) {
-      // Exclude IDs already swiped on
-      const formattedFilter = `(${swipedIds.join(',')})`;
+    if (excludedIds.length > 0) {
+      // Exclude IDs already swiped on or blocked
+      const formattedFilter = `(${excludedIds.join(',')})`;
       query = query.not('id', 'in', formattedFilter);
     }
 
@@ -272,6 +276,9 @@ export async function checkForMatch(
 
 export async function getUserMatches(userId: string): Promise<Match[]> {
   try {
+    const blockedIds = await getAllBlockedRelationIds(userId);
+    const blockedSet = new Set(blockedIds);
+
     const { data: matchRows, error } = await supabase
       .from('matches')
       .select('*')
@@ -287,6 +294,9 @@ export async function getUserMatches(userId: string): Promise<Match[]> {
 
     for (const row of matchRows) {
       const partnerId = row.user_a === userId ? row.user_b : row.user_a;
+      if (blockedSet.has(partnerId)) {
+        continue;
+      }
       const partnerProfile = await getProfile(partnerId);
 
       // Fetch last message
@@ -403,12 +413,14 @@ export async function sendMessage(
   messageType: 'text' | 'voice' = 'text'
 ): Promise<Message | null> {
   try {
+    const sanitized = messageType === 'text' ? filterMessage(content.trim()) : content.trim();
+
     const { data, error } = await supabase
       .from('messages')
       .insert({
         match_id: matchId,
         sender_id: senderId,
-        content: content.trim(),
+        content: sanitized,
         message_type: messageType,
         is_read: false,
         created_at: new Date().toISOString(),
@@ -574,6 +586,247 @@ export async function updateProfilePhotos(
   } catch (err: any) {
     console.error('[databaseService] updateProfilePhotos unexpected error:', err);
     return { success: false, error: err?.message || 'Failed to update profile photos' };
+  }
+}
+
+/* ==========================================================================
+   BLOCKS & REPORTS
+   ========================================================================== */
+
+export async function blockUser(
+  blockerId: string,
+  blockedId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error: blockError } = await supabase
+      .from('blocks')
+      .upsert(
+        {
+          blocker_id: blockerId,
+          blocked_id: blockedId,
+          created_at: new Date().toISOString(),
+        },
+        { onConflict: 'blocker_id,blocked_id' }
+      );
+
+    if (blockError) {
+      console.error('[databaseService] blockUser error:', blockError.message);
+      return { success: false, error: blockError.message };
+    }
+
+    // Remove any existing match between them (bidirectional check)
+    await supabase
+      .from('matches')
+      .delete()
+      .or(`and(user_a.eq.${blockerId},user_b.eq.${blockedId}),and(user_a.eq.${blockedId},user_b.eq.${blockerId})`);
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] blockUser unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to block user' };
+  }
+}
+
+export async function unblockUser(
+  blockerId: string,
+  blockedId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('blocks')
+      .delete()
+      .eq('blocker_id', blockerId)
+      .eq('blocked_id', blockedId);
+
+    if (error) {
+      console.error('[databaseService] unblockUser error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] unblockUser unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to unblock user' };
+  }
+}
+
+export async function getBlockedUserIds(userId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('blocks')
+      .select('blocked_id')
+      .eq('blocker_id', userId);
+
+    if (error || !data) {
+      console.warn('[databaseService] getBlockedUserIds error:', error?.message);
+      return [];
+    }
+
+    return data.map((row: any) => row.blocked_id);
+  } catch (err) {
+    console.error('[databaseService] getBlockedUserIds unexpected error:', err);
+    return [];
+  }
+}
+
+export async function getAllBlockedRelationIds(userId: string): Promise<string[]> {
+  try {
+    // 1. Users blocked by current user
+    const { data: blockedByMe, error: err1 } = await supabase
+      .from('blocks')
+      .select('blocked_id')
+      .eq('blocker_id', userId);
+
+    // 2. Users who blocked current user
+    const { data: blockedMe, error: err2 } = await supabase
+      .from('blocks')
+      .select('blocker_id')
+      .eq('blocked_id', userId);
+
+    if (err1) console.warn('[databaseService] getAllBlockedRelationIds err1:', err1.message);
+    if (err2) console.warn('[databaseService] getAllBlockedRelationIds err2:', err2.message);
+
+    const ids: string[] = [];
+    if (blockedByMe) {
+      ids.push(...blockedByMe.map((r: any) => r.blocked_id));
+    }
+    if (blockedMe) {
+      ids.push(...blockedMe.map((r: any) => r.blocker_id));
+    }
+
+    return Array.from(new Set(ids));
+  } catch (err) {
+    console.error('[databaseService] getAllBlockedRelationIds error:', err);
+    return [];
+  }
+}
+
+export async function getBlockedUsers(userId: string): Promise<UserProfile[]> {
+  try {
+    const blockedIds = await getBlockedUserIds(userId);
+    if (blockedIds.length === 0) return [];
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', blockedIds);
+
+    if (error || !data) {
+      console.warn('[databaseService] getBlockedUsers error:', error?.message);
+      return [];
+    }
+
+    return data.map(mapProfileRowToUserProfile);
+  } catch (err) {
+    console.error('[databaseService] getBlockedUsers unexpected error:', err);
+    return [];
+  }
+}
+
+export async function isUserBlocked(userId: string, otherUserId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('blocks')
+      .select('id')
+      .eq('blocker_id', userId)
+      .eq('blocked_id', otherUserId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    return true;
+  } catch (err) {
+    console.error('[databaseService] isUserBlocked error:', err);
+    return false;
+  }
+}
+
+export async function reportUser(
+  reporterId: string,
+  reportedId: string,
+  reason: string,
+  details?: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('reports')
+      .insert({
+        reporter_id: reporterId,
+        reported_id: reportedId,
+        reason: reason.trim(),
+        details: details?.trim() || null,
+        created_at: new Date().toISOString(),
+      });
+
+    if (error) {
+      console.error('[databaseService] reportUser error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] reportUser unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to report user' };
+  }
+}
+
+export async function hasReportedUser(
+  reporterId: string,
+  reportedId: string
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('id')
+      .eq('reporter_id', reporterId)
+      .eq('reported_id', reportedId)
+      .maybeSingle();
+
+    if (error || !data) return false;
+    return true;
+  } catch (err) {
+    console.error('[databaseService] hasReportedUser error:', err);
+    return false;
+  }
+}
+
+/* ==========================================================================
+   ACCOUNT DELETION
+   ========================================================================== */
+
+export async function deleteAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    // 1. Fetch user photos and delete them from storage
+    const profile = await getProfile(userId);
+    if (profile && Array.isArray(profile.photos)) {
+      for (const photoUrl of profile.photos) {
+        await deletePhoto(userId, photoUrl);
+      }
+    }
+
+    // 2. Delete user data across tables
+    // Delete swipes
+    await supabase.from('swipes').delete().or(`swiper_id.eq.${userId},swiped_id.eq.${userId}`);
+    // Delete messages
+    await supabase.from('messages').delete().eq('sender_id', userId);
+    // Delete matches
+    await supabase.from('matches').delete().or(`user_a.eq.${userId},user_b.eq.${userId}`);
+    // Delete reports
+    await supabase.from('reports').delete().or(`reporter_id.eq.${userId},reported_id.eq.${userId}`);
+    // Delete blocks
+    await supabase.from('blocks').delete().or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    // Delete profile
+    const { error: profErr } = await supabase.from('profiles').delete().eq('id', userId);
+    if (profErr) {
+      console.warn('[databaseService] deleteAccount profile delete error:', profErr.message);
+    }
+
+    // 3. Sign out
+    await supabase.auth.signOut();
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] deleteAccount unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to delete account' };
   }
 }
 

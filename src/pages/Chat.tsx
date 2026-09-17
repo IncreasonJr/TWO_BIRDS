@@ -21,11 +21,16 @@ import {
   ChevronRight,
   Play,
   Pause,
-  Volume2
+  Volume2,
+  MoreVertical,
+  Shield,
+  Ban,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Message } from '../types';
 import { useUser } from '../context/UserContext';
+import { ReportModal } from '../components/ReportModal';
+import { BlockModal } from '../components/BlockModal';
 
 const ICEBREAKERS = [
   { text: "Library study session?", icon: BookOpen },
@@ -102,13 +107,23 @@ const VoiceMessageBubble: React.FC<{ msg: Message; isMe: boolean }> = ({ msg, is
 };
 
 export const Chat: React.FC = () => {
-  const { activeMatch, activeMessages, isTyping, handleSendMessage, handleSendVoiceNote } = useMatches();
+  const { activeMatch, activeMessages, isTyping, handleSendMessage, handleSendVoiceNote, refreshMatches } = useMatches();
   const { authUser, currentUser } = useUser();
   const currentUserId = authUser?.id || currentUser?.id;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const handleBlockSuccess = async () => {
+    setIsProfileOpen(false);
+    setShowMenu(false);
+    await refreshMatches();
+    navigate('/matches');
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -212,13 +227,69 @@ export const Chat: React.FC = () => {
           </button>
         </div>
 
-        {/* View Profile Button Chip */}
-        <button
-          onClick={() => setIsProfileOpen(true)}
-          className="px-3 py-1 rounded-full bg-[#333333] hover:bg-[#4A4A4A] border border-[#C9A84C]/50 text-[#C9A84C] text-[10px] font-bold transition active:scale-95"
-        >
-          View Profile
-        </button>
+        {/* Header Actions */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setIsProfileOpen(true)}
+            className="px-3 py-1 rounded-full bg-[#333333] hover:bg-[#4A4A4A] border border-[#C9A84C]/50 text-[#C9A84C] text-[10px] font-bold transition active:scale-95"
+          >
+            Profile
+          </button>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu((prev) => !prev)}
+              className="p-1.5 rounded-full hover:bg-[#333333] text-[#A0A0A0] hover:text-[#FFFFFF] transition"
+              title="More options"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            <AnimatePresence>
+              {showMenu && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                  className="absolute right-0 top-full mt-2 w-48 rounded-2xl bg-[#1A1A1A] border border-[#4A4A4A] shadow-2xl p-1.5 z-50 flex flex-col gap-1"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      setIsProfileOpen(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#CCCCCC] hover:text-[#FFFFFF] hover:bg-[#2A2A2A] rounded-xl transition text-left"
+                  >
+                    <span>View Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowReportModal(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#CCCCCC] hover:text-[#FFFFFF] hover:bg-[#2A2A2A] rounded-xl transition text-left"
+                  >
+                    <Shield className="w-4 h-4 text-[#C9A84C]" />
+                    <span>Report {activeMatch.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowBlockModal(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition text-left"
+                  >
+                    <Ban className="w-4 h-4 text-red-400" />
+                    <span>Block {activeMatch.name}</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
 
       {/* Message Feed Area (Scrollable Only Here) */}
@@ -486,18 +557,58 @@ export const Chat: React.FC = () => {
               </div>
 
               {/* Action Button Footer */}
-              <div className="p-4 bg-[#333333] border-t border-[#4A4A4A]">
+              <div className="p-4 bg-[#333333] border-t border-[#4A4A4A] space-y-3">
                 <button
                   onClick={() => setIsProfileOpen(false)}
                   className="w-full py-3 rounded-2xl bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-xs shadow-glow-gold flex items-center justify-center gap-2 hover:bg-[#C9A84C]/90 transition"
                 >
                   Back to Chat
                 </button>
+
+                <div className="flex items-center justify-between pt-1 px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      setShowReportModal(true);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-[#A0A0A0] hover:text-[#C9A84C] transition py-1"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-[#C9A84C]" />
+                    <span>Report User</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      setShowBlockModal(true);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition py-1"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Block User</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* Safety Modals */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetUserId={activeMatch.userId || (matchUser as any).id}
+        targetUserName={activeMatch.name}
+      />
+      <BlockModal
+        isOpen={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        targetUserId={activeMatch.userId || (matchUser as any).id}
+        targetUserName={activeMatch.name}
+        onBlockSuccess={handleBlockSuccess}
+      />
     </div>
   );
 };

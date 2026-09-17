@@ -18,6 +18,9 @@ const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const BlockedUsers = lazy(() => import('./pages/BlockedUsers'));
+const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
+const CommunityGuidelines = lazy(() => import('./pages/CommunityGuidelines'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PageLoadingFallback: React.FC = () => (
@@ -67,7 +70,11 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   // Mandatory photo gate: If user has 0 photos and is not on /add-photos or /profile, redirect to /add-photos
   const hasPhotos = currentUser.photos && currentUser.photos.length > 0;
-  const isAllowedWithoutPhotos = location.pathname === '/add-photos' || location.pathname === '/profile';
+  const isAllowedWithoutPhotos =
+    location.pathname === '/add-photos' ||
+    location.pathname === '/profile' ||
+    location.pathname === '/delete-account' ||
+    location.pathname === '/blocked-users';
 
   if (!hasPhotos && !isAllowedWithoutPhotos) {
     return <Navigate to="/add-photos" replace />;
@@ -81,9 +88,13 @@ const AppContent: React.FC = () => {
   const { isAuthenticated } = useUser();
   const location = useLocation();
 
-  const publicRoutes = ['/signup', '/login', '/verify-email', '/forgot-password', '/privacy', '/terms'];
+  const publicRoutes = ['/signup', '/login', '/verify-email', '/forgot-password', '/privacy', '/terms', '/community-guidelines'];
   const isPublicRoute = publicRoutes.some((route) => location.pathname === route);
-  const isDedicatedScreen = location.pathname === '/add-photos';
+  const isDedicatedScreen =
+    location.pathname === '/add-photos' ||
+    location.pathname === '/blocked-users' ||
+    location.pathname === '/delete-account' ||
+    location.pathname === '/community-guidelines';
   const showNav = !isPublicRoute && !isDedicatedScreen && isAuthenticated;
 
   return (
@@ -102,6 +113,11 @@ const AppContent: React.FC = () => {
               <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+
+              {/* Safety & Moderation Routes */}
+              <Route path="/blocked-users" element={<ProtectedRoute><BlockedUsers /></ProtectedRoute>} />
+              <Route path="/delete-account" element={<ProtectedRoute><DeleteAccount /></ProtectedRoute>} />
+              <Route path="/community-guidelines" element={<CommunityGuidelines />} />
 
               {/* Public Authentication & Verification Routes */}
               <Route path="/signup" element={<Signup defaultMode="signup" />} />

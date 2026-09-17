@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '../types';
 import { getZodiacEmoji } from '../utils/formatters';
-import { GraduationCap, Info, X, Music, School, ChevronLeft, ChevronRight } from 'lucide-react';
+import { GraduationCap, Info, X, Music, School, ChevronLeft, ChevronRight, MoreVertical, Shield, Ban } from 'lucide-react';
+import { ReportModal } from './ReportModal';
+import { BlockModal } from './BlockModal';
 
 interface SwipeCardProps {
   profile: UserProfile;
@@ -14,6 +16,9 @@ interface SwipeCardProps {
 export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront, depth = 0 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -172,16 +177,67 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
                 <span className="text-2xl font-light text-[#C9A84C]">{profile.age}</span>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowInfoModal(true);
-                }}
-                className="p-2 rounded-full bg-[#FFFFFF]/20 hover:bg-[#FFFFFF]/30 text-[#FFFFFF] backdrop-blur-md transition shadow-md"
-                title="View Full Profile"
-              >
-                <Info className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowInfoModal(true);
+                  }}
+                  className="p-2 rounded-full bg-[#FFFFFF]/20 hover:bg-[#FFFFFF]/30 text-[#FFFFFF] backdrop-blur-md transition shadow-md"
+                  title="View Full Profile"
+                >
+                  <Info className="w-4 h-4" />
+                </button>
+
+                {/* More Options / Safety Menu */}
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu((prev) => !prev);
+                    }}
+                    className="p-2 rounded-full bg-[#1A1A1A]/70 hover:bg-[#1A1A1A]/90 text-[#FFFFFF] backdrop-blur-md transition shadow-md border border-[#4A4A4A]"
+                    title="Safety Options"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+
+                  <AnimatePresence>
+                    {showMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 5 }}
+                        className="absolute right-0 bottom-full mb-2 w-44 rounded-2xl bg-[#1A1A1A]/95 backdrop-blur-md border border-[#4A4A4A] shadow-2xl p-1.5 z-50 flex flex-col gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowReportModal(true);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[#CCCCCC] hover:text-[#FFFFFF] hover:bg-[#2A2A2A] rounded-xl transition text-left"
+                        >
+                          <Shield className="w-4 h-4 text-[#C9A84C]" />
+                          <span>Report {profile.name}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowMenu(false);
+                            setShowBlockModal(true);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition text-left"
+                        >
+                          <Ban className="w-4 h-4 text-red-400" />
+                          <span>Block {profile.name}</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2.5 text-[#FFFFFF] text-sm font-semibold">
@@ -321,6 +377,31 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
                     ))}
                   </div>
                 </div>
+                {/* Safety & Moderation Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-[#4A4A4A]/60 px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInfoModal(false);
+                      setShowReportModal(true);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-[#A0A0A0] hover:text-[#C9A84C] transition py-1"
+                  >
+                    <Shield className="w-3.5 h-3.5 text-[#C9A84C]" />
+                    <span>Report Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowInfoModal(false);
+                      setShowBlockModal(true);
+                    }}
+                    className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-300 transition py-1"
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                    <span>Block User</span>
+                  </button>
+                </div>
               </div>
 
               <button
@@ -333,6 +414,23 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
           </div>
         )}
       </AnimatePresence>
+
+      {/* Safety Modals */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetUserId={profile.id}
+        targetUserName={profile.name}
+      />
+      <BlockModal
+        isOpen={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        targetUserId={profile.id}
+        targetUserName={profile.name}
+        onBlockSuccess={() => {
+          onSwipe('left');
+        }}
+      />
     </>
   );
 };

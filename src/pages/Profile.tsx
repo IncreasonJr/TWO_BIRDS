@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { useMatches } from '../hooks/useMatches';
+import { getBlockedUserIds } from '../lib/databaseService';
 import {
   Camera,
   Edit3,
@@ -26,7 +27,10 @@ import {
   Plus,
   Trash2,
   Star,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Ban,
+  BookOpen,
+  LifeBuoy
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -74,6 +78,17 @@ export const Profile: React.FC = () => {
   const [toastMessage, setToastMessage] = useState<string>('');
   const [activePlaceholderModal, setActivePlaceholderModal] = useState<string | null>(null);
   const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
+  const [blockedCount, setBlockedCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      getBlockedUserIds(currentUser.id).then((ids) => {
+        setBlockedCount(ids.length);
+      }).catch((err) => {
+        console.warn('Failed to load blocked user count:', err);
+      });
+    }
+  }, [currentUser?.id]);
 
   // Form State
   const [formName, setFormName] = useState<string>(currentUser.name);
@@ -610,6 +625,71 @@ export const Profile: React.FC = () => {
         </div>
       </div>
 
+      {/* Safety & Community Section */}
+      <div className="space-y-2 shrink-0">
+        <h3 className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider px-1">Safety & Community</h3>
+
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl overflow-hidden divide-y divide-[#4A4A4A] shadow-md">
+          {/* Blocked Users */}
+          <button
+            onClick={() => navigate('/blocked-users')}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <Ban className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-extrabold text-[#FFFFFF]">Blocked Users</p>
+                  {blockedCount > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1A1A1A] text-[#C9A84C] border border-[#C9A84C]/40">
+                      {blockedCount}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Manage blocked student profiles</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </button>
+
+          {/* Community Guidelines */}
+          <button
+            onClick={() => navigate('/community-guidelines')}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <BookOpen className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Community Guidelines</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Our standards for respect and campus safety</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </button>
+
+          {/* Report a Problem */}
+          <a
+            href="mailto:support@twobirds.app?subject=Safety%20or%20Support%20Inquiry"
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <LifeBuoy className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Report a Problem</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Contact our safety & moderation team</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </a>
+        </div>
+      </div>
+
       {/* Legal Section */}
       <div className="space-y-2 shrink-0">
         <h3 className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider px-1">Legal</h3>
@@ -647,6 +727,29 @@ export const Profile: React.FC = () => {
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
+          </button>
+        </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="space-y-2 shrink-0">
+        <h3 className="text-xs font-bold text-red-400 uppercase tracking-wider px-1">Danger Zone</h3>
+
+        <div className="bg-[#333333] border border-red-500/30 rounded-2xl overflow-hidden shadow-md">
+          <button
+            onClick={() => navigate('/delete-account')}
+            className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-red-500/10 transition text-left text-red-400"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-red-400 border border-red-500/20">
+                <Trash2 className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-red-400">Delete Account</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">Permanently erase your profile, photos, and data</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-red-400/60" />
           </button>
         </div>
       </div>
