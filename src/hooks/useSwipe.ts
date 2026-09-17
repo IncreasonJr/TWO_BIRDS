@@ -1,39 +1,114 @@
-import { useState, useCallback } from 'react';
-import { UserProfile } from '../types';
-import { MOCK_PROFILES } from '../data/mockUsers';
+import { useState, useEffect, useCallback } from 'react';
+import { UserProfile, Match } from '../types';
+import {
+  getAllProfilesExcept,
+  getSwipedIds,
+  saveSwipe,
+  checkForMatch as checkMutualMatch,
+} from '../lib/databaseService';
+import { useUser } from '../context/UserContext';
 
 export function useSwipe() {
-  const [profiles] = useState<UserProfile[]>(MOCK_PROFILES);
+  const { authUser, currentUser, incrementSwipes } = useUser();
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [swipedUserIds, setSwipedUserIds] = useState<string[]>([]);
   const [likedUserIds, setLikedUserIds] = useState<string[]>([]);
   const [newMatch, setNewMatch] = useState<UserProfile | null>(null);
+  const [createdMatchObj, setCreatedMatchObj] = useState<Match | null>(null);
   const [history, setHistory] = useState<UserProfile[]>([]);
-  const [swipeCount, setSwipeCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const currentUserId = authUser?.id || currentUser?.id;
+
+  // Load profiles and swiped user IDs from Supabase
+  const reloadFeed = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoading(true);
+    try {
+      const swiped = await getSwipedIds(currentUserId);
+      setSwipedUserIds(swiped);
+      const feedProfiles = await getAllProfilesExcept(currentUserId, swiped);
+      setProfiles(feedProfiles);
+      setCurrentIndex(0);
+    } catch (err) {
+      console.error('[useSwipe] Error reloading feed:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+
+    async function fetchFeed() {
+      try {
+        const swiped = await getSwipedIds(currentUserId);
+        if (!mounted) return;
+        setSwipedUserIds(swiped);
+
+        const feedProfiles = await getAllProfilesExcept(currentUserId, swiped);
+        if (!mounted) return;
+        setProfiles(feedProfiles);
+        setCurrentIndex(0);
+      } catch (err) {
+        console.error('[useSwipe] Error loading feed:', err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+
+    fetchFeed();
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId]);
 
   const currentProfile = profiles[currentIndex] || null;
   const nextProfile = profiles[currentIndex + 1] || null;
   const thirdProfile = profiles[currentIndex + 2] || null;
 
-  const handleSwipe = useCallback((direction: 'left' | 'right') => {
-    if (!currentProfile) return;
+  const handleSwipe = useCallback(
+    async (direction: 'left' | 'right') => {
+      if (!currentProfile || !currentUserId) return;
 
-    setSwipedUserIds((prev) => [...prev, currentProfile.id]);
-    setHistory((prev) => [...prev, currentProfile]);
-    setSwipeCount((prev) => prev + 1);
+      const swipedProfile = currentProfile;
+      const swipedId = swipedProfile.id;
 
-    if (direction === 'right') {
-      setLikedUserIds((prev) => [...prev, currentProfile.id]);
+      // Update local state immediately for snappy UI animation
+      setSwipedUserIds((prev) => [...prev, swipedId]);
+      setHistory((prev) => [...prev, swipedProfile]);
+      setCurrentIndex((prev) => prev + 1);
+      incrementSwipes();
 
-      // Mutual match trigger simulation
-      const isMutualMatch = currentProfile.id === 'user-1' || currentProfile.id === 'user-3' || currentProfile.id === 'user-7' || Math.random() > 0.45;
-      if (isMutualMatch) {
-        setNewMatch(currentProfile);
+      // Persist swipe to Supabase
+      const swipeDirection: 'like' | 'pass' = direction === 'right' ? 'like' : 'pass';
+      saveSwipe(currentUserId, swipedId, swipeDirection).catch((err) => {
+        console.warn('[useSwipe] saveSwipe background error:', err);
+      });
+
+      if (direction === 'right') {
+        setLikedUserIds((prev) => [...prev, swipedId]);
+
+        // Check for mutual match in Supabase
+        try {
+          const matchResult = await checkMutualMatch(currentUserId, swipedId);
+          if (matchResult) {
+            setCreatedMatchObj(matchResult);
+            setNewMatch(swipedProfile);
+          }
+        } catch (matchErr) {
+          console.warn('[useSwipe] checkForMatch error:', matchErr);
+        }
       }
-    }
-
-    setCurrentIndex((prev) => prev + 1);
-  }, [currentProfile]);
+    },
+    [currentProfile, currentUserId, incrementSwipes]
+  );
 
   const rewind = useCallback(() => {
     if (currentIndex > 0) {
@@ -48,29 +123,28 @@ export function useSwipe() {
   }, [currentIndex, history]);
 
   const resetFeed = useCallback(() => {
-    setCurrentIndex(0);
-    setSwipedUserIds([]);
-    setLikedUserIds([]);
-    setHistory([]);
-    setNewMatch(null);
-  }, []);
+    reloadFeed();
+  }, [reloadFeed]);
 
   const dismissMatchModal = useCallback(() => {
     setNewMatch(null);
+    setCreatedMatchObj(null);
   }, []);
 
   return {
+    profiles,
     currentProfile,
     nextProfile,
     thirdProfile,
     hasMore: currentIndex < profiles.length,
+    loading,
     handleSwipe,
     rewind,
     canRewind: currentIndex > 0,
     newMatch,
+    createdMatchObj,
     dismissMatchModal,
     resetFeed,
-    swipeCount,
     swipedUserIds,
     likedUserIds,
     remainingCount: Math.max(0, profiles.length - currentIndex),

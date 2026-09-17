@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Message } from '../types';
+import { useUser } from '../context/UserContext';
 
 const ICEBREAKERS = [
   { text: "Library study session?", icon: BookOpen },
@@ -102,6 +103,8 @@ const VoiceMessageBubble: React.FC<{ msg: Message; isMe: boolean }> = ({ msg, is
 
 export const Chat: React.FC = () => {
   const { activeMatch, activeMessages, isTyping, handleSendMessage, handleSendVoiceNote } = useMatches();
+  const { authUser, currentUser } = useUser();
+  const currentUserId = authUser?.id || currentUser?.id;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -230,7 +233,7 @@ export const Chat: React.FC = () => {
 
         {/* Chat Bubbles */}
         {activeMessages.map((msg) => {
-          const isMe = msg.senderId === 'current-user';
+          const isMe = msg.senderId === currentUserId || msg.senderId === 'current-user';
           const isVoice = msg.type === 'voice';
 
           return (

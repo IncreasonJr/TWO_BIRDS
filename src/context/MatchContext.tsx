@@ -1,50 +1,154 @@
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Match, Message, UserProfile } from '../types';
-import { MOCK_MATCHES } from '../data/mockMatches';
-
-const AUTO_RESPONSES = [
-  "That's so cool! Tell me more.",
-  "Haha, I totally get that!",
-  "Oh wow, same here!",
-  "No way, me too! 😁",
-  "That's awesome! We should chat more."
-];
+import { useUser } from './UserContext';
+import {
+  getUserMatches,
+  getMessages,
+  sendMessage as sendDbMessage,
+  subscribeToMessages,
+  checkForMatch as checkMutualMatch,
+} from '../lib/databaseService';
 
 interface MatchContextType {
   matches: Match[];
   activeMatch: Match | null;
   activeMatchId: string;
   activeMessages: Message[];
+  loadingMatches: boolean;
+  loadingMessages: boolean;
   isTyping: boolean;
   typingUsers: Record<string, boolean>;
   totalUnread: number;
   setActiveMatchId: (id: string) => void;
-  createMatch: (user: UserProfile) => Match;
-  handleSendMessage: (text: string) => void;
-  handleSendMessageFrom: (senderId: string, text: string, targetMatchId?: string) => void;
-  handleSendVoiceNote: (audioUrl: string, duration: string) => void;
+  createMatch: (user: UserProfile) => Promise<Match | null>;
+  handleSendMessage: (text: string) => Promise<void>;
+  handleSendMessageFrom: (senderId: string, text: string, targetMatchId?: string) => Promise<void>;
+  handleSendVoiceNote: (audioUrl: string, duration: string) => Promise<void>;
   setTypingStatus: (matchId: string, isTyping: boolean) => void;
   isMatchTyping: (matchId: string) => boolean;
+  refreshMatches: () => Promise<void>;
 }
 
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
 
 export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [matches, setMatches] = useState<Match[]>(MOCK_MATCHES);
-  const [activeMatchId, setActiveMatchIdState] = useState<string>(MOCK_MATCHES[0]?.id || '');
+  const { authUser, currentUser } = useUser();
+  const currentUserId = authUser?.id || currentUser?.id;
+
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [activeMatchId, setActiveMatchIdState] = useState<string>('');
+  const [messagesByMatch, setMessagesByMatch] = useState<Record<string, Message[]>>({});
+  const [loadingMatches, setLoadingMatches] = useState<boolean>(true);
+  const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
+
+  // 1. Fetch user matches on mount or auth change
+  const refreshMatches = useCallback(async () => {
+    if (!currentUserId) {
+      setMatches([]);
+      setLoadingMatches(false);
+      return;
+    }
+
+    setLoadingMatches(true);
+    try {
+      const dbMatches = await getUserMatches(currentUserId);
+      setMatches(dbMatches);
+      if (dbMatches.length > 0 && !activeMatchId) {
+        setActiveMatchIdState(dbMatches[0].id);
+      }
+    } catch (err) {
+      console.error('[MatchContext] Error loading matches:', err);
+    } finally {
+      setLoadingMatches(false);
+    }
+  }, [currentUserId, activeMatchId]);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!currentUserId) {
+      setMatches([]);
+      setLoadingMatches(false);
+      return;
+    }
+
+    getUserMatches(currentUserId).then((dbMatches) => {
+      if (mounted) {
+        setMatches(dbMatches);
+        if (dbMatches.length > 0 && !activeMatchId) {
+          setActiveMatchIdState(dbMatches[0].id);
+        }
+        setLoadingMatches(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentUserId, activeMatchId]);
 
   const activeMatch = useMemo(() => {
     return matches.find((m) => m.id === activeMatchId) || matches[0] || null;
   }, [matches, activeMatchId]);
 
   const activeMessages = useMemo(() => {
-    return activeMatch?.messages || [];
-  }, [activeMatch]);
+    if (!activeMatch) return [];
+    return messagesByMatch[activeMatch.id] || [];
+  }, [activeMatch, messagesByMatch]);
 
   const totalUnread = useMemo(() => {
     return matches.filter((m) => m.unread).length;
   }, [matches]);
+
+  // 2. Fetch messages for active match & listen to realtime updates
+  useEffect(() => {
+    let mounted = true;
+    if (!activeMatchId) return;
+
+    getMessages(activeMatchId).then((msgs) => {
+      if (mounted) {
+        setMessagesByMatch((prev) => ({
+          ...prev,
+          [activeMatchId]: msgs,
+        }));
+        setLoadingMessages(false);
+      }
+    });
+
+    // 3. Realtime subscription for incoming messages
+    const unsubscribe = subscribeToMessages(activeMatchId, (newMsg) => {
+      if (!mounted) return;
+
+      setMessagesByMatch((prev) => {
+        const existing = prev[activeMatchId] || [];
+        if (existing.some((m) => m.id === newMsg.id)) return prev;
+        return {
+          ...prev,
+          [activeMatchId]: [...existing, newMsg],
+        };
+      });
+
+      // Update match preview in matches list
+      setMatches((prevMatches) =>
+        prevMatches.map((m) => {
+          if (m.id === activeMatchId) {
+            return {
+              ...m,
+              lastMessage: newMsg.type === 'voice' ? '🎤 Voice note' : newMsg.text,
+              lastMessageTimestamp: newMsg.timestamp,
+              unread: false,
+            };
+          }
+          return m;
+        })
+      );
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [activeMatchId]);
 
   const setTypingStatus = useCallback((matchId: string, typingState: boolean) => {
     setTypingUsers((prev) => ({
@@ -68,139 +172,101 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   }, []);
 
-  const createMatch = useCallback((user: UserProfile): Match => {
+  const createMatch = useCallback(async (user: UserProfile): Promise<Match | null> => {
+    if (!currentUserId) return null;
+
     const existing = matches.find((m) => m.userId === user.id);
     if (existing) {
       setActiveMatchIdState(existing.id);
       return existing;
     }
 
-    const newMatchObj: Match = {
-      id: `match-${Date.now()}`,
-      userId: user.id,
-      name: user.name,
-      age: user.age,
-      major: user.major,
-      photos: user.photos,
-      onlineStatus: 'online',
-      lastActive: new Date(),
-      matchedAt: 'Just now',
-      users: ['current-user', user.id],
-      user: user,
-      lastMessage: 'Matched! Send the first message.',
-      lastMessageTimestamp: 'Just now',
-      unread: true,
-      online: true,
-      messages: [],
-    };
+    try {
+      const matchObj = await checkMutualMatch(currentUserId, user.id);
+      if (matchObj) {
+        setMatches((prev) => [matchObj, ...prev]);
+        setActiveMatchIdState(matchObj.id);
+        return matchObj;
+      }
+    } catch (err) {
+      console.warn('[MatchContext] createMatch error:', err);
+    }
+    return null;
+  }, [currentUserId, matches]);
 
-    setMatches((prev) => [newMatchObj, ...prev]);
-    setActiveMatchIdState(newMatchObj.id);
-    return newMatchObj;
-  }, [matches]);
+  const handleSendMessageFrom = useCallback(async (
+    senderId: string,
+    text: string,
+    targetMatchId?: string
+  ) => {
+    const matchIdToUse = targetMatchId || activeMatch?.id;
+    if (!matchIdToUse || !text.trim()) return;
 
-  const handleSendMessageFrom = useCallback((senderId: string, text: string, targetMatchId?: string) => {
-    if (!text.trim()) return;
-
-    const matchToUse = targetMatchId
-      ? matches.find((m) => m.id === targetMatchId) || activeMatch
-      : activeMatch;
-
-    if (!matchToUse) return;
-
-    const isCurrentUserSender = senderId === 'current-user';
-    const receiverId = isCurrentUserSender ? matchToUse.userId : 'current-user';
-
-    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      matchId: matchToUse.id,
-      senderId: senderId,
-      receiverId: receiverId,
-      text: text.trim(),
-      timestamp: timeString,
-      isRead: true,
-      type: 'text'
-    };
-
-    setMatches((prev) =>
-      prev.map((m) => {
-        if (m.id === matchToUse.id) {
+    try {
+      const newMsg = await sendDbMessage(matchIdToUse, senderId, text.trim(), 'text');
+      if (newMsg) {
+        setMessagesByMatch((prev) => {
+          const currentList = prev[matchIdToUse] || [];
+          if (currentList.some((m) => m.id === newMsg.id)) return prev;
           return {
-            ...m,
-            lastMessage: text.trim(),
-            lastMessageTimestamp: timeString,
-            messages: [...m.messages, newMessage],
+            ...prev,
+            [matchIdToUse]: [...currentList, newMsg],
           };
-        }
-        return m;
-      })
-    );
-  }, [activeMatch, matches]);
+        });
 
-  const handleSendVoiceNote = useCallback((audioUrl: string, duration: string) => {
-    if (!activeMatch) return;
+        setMatches((prevMatches) =>
+          prevMatches.map((m) => {
+            if (m.id === matchIdToUse) {
+              return {
+                ...m,
+                lastMessage: text.trim(),
+                lastMessageTimestamp: newMsg.timestamp,
+              };
+            }
+            return m;
+          })
+        );
+      }
+    } catch (err) {
+      console.error('[MatchContext] Error sending message:', err);
+    }
+  }, [activeMatch]);
 
+  const handleSendMessage = useCallback(async (text: string) => {
+    if (!currentUserId || !text.trim()) return;
+    await handleSendMessageFrom(currentUserId, text);
+  }, [currentUserId, handleSendMessageFrom]);
+
+  const handleSendVoiceNote = useCallback(async (audioUrl: string, duration: string) => {
+    if (!currentUserId || !activeMatch?.id) return;
     const matchId = activeMatch.id;
-    const matchUserId = activeMatch.userId;
-    const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const voiceMessage: Message = {
-      id: `voice-${Date.now()}`,
-      matchId: matchId,
-      senderId: 'current-user',
-      receiverId: matchUserId,
-      text: `🎤 Voice note (${duration})`,
-      timestamp: timeString,
-      isRead: true,
-      type: 'voice',
-      audioUrl: audioUrl,
-      duration: duration
-    };
 
-    setMatches((prev) =>
-      prev.map((m) => {
-        if (m.id === matchId) {
-          return {
-            ...m,
-            lastMessage: `🎤 Voice note (${duration})`,
-            lastMessageTimestamp: timeString,
-            messages: [...m.messages, voiceMessage],
-          };
-        }
-        return m;
-      })
-    );
+    try {
+      const newMsg = await sendDbMessage(matchId, currentUserId, audioUrl, 'voice');
+      if (newMsg) {
+        newMsg.duration = duration;
+        setMessagesByMatch((prev) => ({
+          ...prev,
+          [matchId]: [...(prev[matchId] || []), newMsg],
+        }));
 
-    // Trigger typing indicator for active match
-    setTypingStatus(matchId, true);
-
-    const randomDelay = Math.floor(Math.random() * 1500) + 1500; // 1.5 - 3 seconds
-
-    setTimeout(() => {
-      setTypingStatus(matchId, false);
-      const replyText = "Loved your voice note! 🎧";
-      handleSendMessageFrom(matchUserId, replyText, matchId);
-    }, randomDelay);
-  }, [activeMatch, handleSendMessageFrom, setTypingStatus]);
-
-  const handleSendMessage = useCallback((text: string) => {
-    if (!activeMatch || !text.trim()) return;
-
-    const matchId = activeMatch.id;
-    const matchUserId = activeMatch.userId;
-    handleSendMessageFrom('current-user', text, matchId);
-
-    // Trigger typing indicator for active match
-    setTypingStatus(matchId, true);
-
-    const randomDelay = Math.floor(Math.random() * 1500) + 1500; // 1.5 - 3 seconds
-
-    setTimeout(() => {
-      setTypingStatus(matchId, false);
-      const replyText = AUTO_RESPONSES[Math.floor(Math.random() * AUTO_RESPONSES.length)];
-      handleSendMessageFrom(matchUserId, replyText, matchId);
-    }, randomDelay);
-  }, [activeMatch, handleSendMessageFrom, setTypingStatus]);
+        setMatches((prev) =>
+          prev.map((m) => {
+            if (m.id === matchId) {
+              return {
+                ...m,
+                lastMessage: `🎤 Voice note (${duration})`,
+                lastMessageTimestamp: newMsg.timestamp,
+              };
+            }
+            return m;
+          })
+        );
+      }
+    } catch (err) {
+      console.error('[MatchContext] Error sending voice note:', err);
+    }
+  }, [currentUserId, activeMatch]);
 
   return (
     <MatchContext.Provider
@@ -209,6 +275,8 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         activeMatch,
         activeMatchId,
         activeMessages,
+        loadingMatches,
+        loadingMessages,
         isTyping,
         typingUsers,
         totalUnread,
@@ -219,15 +287,13 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         handleSendVoiceNote,
         setTypingStatus,
         isMatchTyping,
+        refreshMatches,
       }}
     >
       {children}
     </MatchContext.Provider>
   );
 };
-
-
-
 
 export function useMatches() {
   const context = useContext(MatchContext);

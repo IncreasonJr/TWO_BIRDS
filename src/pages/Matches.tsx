@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
-import { Sparkles, Search, ChevronRight, Heart } from 'lucide-react';
+import { Sparkles, Search, ChevronRight, Heart, RefreshCw } from 'lucide-react';
 
 export const Matches: React.FC = () => {
-  const { matches, setActiveMatchId } = useMatches();
+  const { matches, setActiveMatchId, loadingMatches } = useMatches();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -19,7 +19,7 @@ export const Matches: React.FC = () => {
     return matches.filter(
       (m) =>
         m.name.toLowerCase().includes(query) ||
-        m.major.toLowerCase().includes(query)
+        (m.major && m.major.toLowerCase().includes(query))
     );
   }, [matches, searchQuery]);
 
@@ -33,11 +33,18 @@ export const Matches: React.FC = () => {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search matches or majors..."
-          className="w-full bg-[#333333] border border-[#4A4A4A] rounded-2xl pl-10 pr-4 py-2.5 text-xs text-[#FFFFFF] placeholder-[#4A4A4A] focus:outline-none focus:border-[#C9A84C] transition"
+          className="w-full bg-[#333333] border border-[#4A4A4A] rounded-2xl pl-10 pr-4 py-2.5 text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] transition font-medium"
         />
       </div>
 
-      {matches.length === 0 ? (
+      {loadingMatches ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#333333] border border-[#C9A84C]/40 flex items-center justify-center text-[#C9A84C]">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#C9A84C]" />
+          </div>
+          <p className="text-xs text-[#A0A0A0] font-semibold">Loading your campus matches...</p>
+        </div>
+      ) : matches.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
           <div className="w-14 h-14 rounded-full bg-[#333333] border border-[#4A4A4A] flex items-center justify-center text-[#C9A84C]">
             <Heart className="w-6 h-6" />
@@ -45,7 +52,7 @@ export const Matches: React.FC = () => {
           <p className="text-sm font-bold text-[#FFFFFF]">No matches yet. Start swiping!</p>
           <button
             onClick={() => navigate('/')}
-            className="px-5 py-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold"
+            className="px-5 py-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold active:scale-95 transition"
           >
             Explore Profiles
           </button>
@@ -104,7 +111,6 @@ export const Matches: React.FC = () => {
                     />
                   </div>
 
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
@@ -113,19 +119,19 @@ export const Matches: React.FC = () => {
                           <span className="w-2 h-2 rounded-full bg-[#C9A84C] shadow-glow-gold flex-shrink-0" />
                         )}
                       </div>
-                      <span className="text-[10px] text-[#4A4A4A] font-medium">{match.lastMessageTimestamp}</span>
+                      <span className="text-[10px] text-[#A0A0A0] font-medium">{match.lastMessageTimestamp}</span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-[#4A4A4A] font-medium mt-0.5">
+                    <div className="flex items-center gap-2 text-xs text-[#A0A0A0] font-medium mt-0.5">
                       <span className="text-[#C9A84C] font-semibold">{match.major}</span>
                     </div>
 
-                    <p className={`text-xs truncate mt-1 ${match.unread ? 'font-bold text-[#FFFFFF]' : 'text-[#4A4A4A]'}`}>
+                    <p className={`text-xs truncate mt-1 ${match.unread ? 'font-bold text-[#FFFFFF]' : 'text-[#A0A0A0]'}`}>
                       {match.lastMessage || 'Matched! Send the first message.'}
                     </p>
                   </div>
 
-                  <ChevronRight className="w-4 h-4 text-[#4A4A4A] group-hover:text-[#C9A84C] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-[#A0A0A0] group-hover:text-[#C9A84C] transition-colors" />
                 </div>
               ))}
             </div>
@@ -135,3 +141,5 @@ export const Matches: React.FC = () => {
     </div>
   );
 };
+
+export default Matches;

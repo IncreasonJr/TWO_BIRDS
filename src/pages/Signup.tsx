@@ -5,7 +5,6 @@ import { useUser } from '../context/UserContext';
 import { isValidEduEmail } from '../utils/validation';
 import {
   School,
-  Sparkles,
   Mail,
   Lock,
   User,
@@ -130,15 +129,16 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
     <div className="h-full flex flex-col bg-[#1A1A1A] text-[#FFFFFF] overflow-y-auto px-5 py-6">
       {/* Brand Header */}
       <div className="text-center space-y-2 mb-6">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#333333] border border-[#4A4A4A] shadow-glow-gold mb-1">
-          <Sparkles className="w-7 h-7 text-[#C9A84C]" />
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#333333] border border-[#4A4A4A] shadow-glow-gold mb-1 overflow-hidden p-1.5">
+          <img
+            src="/logo192.png"
+            alt="Two Birds Logo"
+            className="w-full h-full object-cover rounded-xl"
+          />
         </div>
         <h1 className="text-2xl font-bold font-serif text-[#FFFFFF] tracking-tight">
           Two Birds
         </h1>
-        <p className="text-xs text-[#C9A84C] font-semibold tracking-wider uppercase">
-          Exclusive University Dating
-        </p>
       </div>
 
       {/* Mode Switcher */}

@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { User, Session } from '@supabase/supabase-js';
 import { UserProfile } from '../types';
 import { INITIAL_CURRENT_USER } from '../data/currentUser';
-import { MOCK_PROFILES } from '../data/mockUsers';
 import { isValidEduEmail } from '../utils/validation';
 import {
   signUpWithEmail,
@@ -12,6 +11,12 @@ import {
   onAuthStateChange,
   UserSignUpMetadata,
 } from '../lib/authService';
+import {
+  getProfile,
+  updateProfile as updateDbProfile,
+  createDefaultProfile,
+  getSwipedIds,
+} from '../lib/databaseService';
 
 export interface SignupData {
   name: string;
@@ -40,12 +45,13 @@ interface UserContextType {
   uploadProgress: number;
   totalSwipes: number;
   completionPercentage: number;
-  updateProfile: (data: Partial<UserProfile>) => void;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   uploadPhoto: (file: File) => void;
   incrementSwipes: () => void;
   signup: (data: SignupData, password: string) => Promise<AuthResponse>;
   login: (email: string, password?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -69,48 +75,69 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [totalSwipes, setTotalSwipes] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('twobirds_swipes');
-      if (saved !== null) return Number(saved) || 14;
+      if (saved !== null) return Number(saved) || 0;
     } catch {}
-    return 14;
+    return 0;
   });
 
   // Calculate email verification status
   const isEmailVerified = useMemo(() => {
     if (!authUser) return false;
-    // Check if email is confirmed in Supabase auth
     return !!(authUser.email_confirmed_at || (authUser as any).confirmed_at);
   }, [authUser]);
 
   // Is user authenticated and verified
   const isAuthenticated = useMemo(() => {
-    // User must have an active session
     if (!session || !authUser) return false;
-    // User must have confirmed their email
     return isEmailVerified;
   }, [session, authUser, isEmailVerified]);
 
   // Sync Supabase user into currentUser profile representation
-  const syncUserFromAuth = useCallback((user: User) => {
+  const syncUserFromAuth = useCallback(async (user: User) => {
     setAuthUser(user);
     const meta = user.user_metadata || {};
 
-    setCurrentUser((prev) => {
-      const updated: UserProfile = {
-        ...prev,
-        id: user.id,
-        uid: user.id,
-        email: user.email || prev.email,
-        name: meta.name || prev.name || 'Student',
-        university: meta.university || prev.university || 'Stanford University',
-        major: meta.major || prev.major || 'Undecided',
-        age: meta.age ? Number(meta.age) : prev.age,
-        gender: meta.gender || prev.gender || 'Other',
-        bio: meta.bio !== undefined ? meta.bio : prev.bio,
-        verifiedCampus: !!(user.email_confirmed_at || (user as any).confirmed_at),
-      };
-      return updated;
-    });
+    try {
+      // 1. Fetch real profile from Supabase
+      let profile = await getProfile(user.id);
+
+      // 2. If not found, create default profile row in public.profiles
+      if (!profile) {
+        profile = await createDefaultProfile(user.id, user.email || '', meta);
+      }
+
+      if (profile) {
+        setCurrentUser(profile);
+      } else {
+        // Fallback in-memory representation
+        setCurrentUser((prev) => ({
+          ...prev,
+          id: user.id,
+          uid: user.id,
+          email: user.email || prev.email,
+          name: meta.name || prev.name || 'Student',
+          university: meta.university || prev.university || 'Stanford University',
+          major: meta.major || prev.major || 'Undecided',
+          age: meta.age ? Number(meta.age) : prev.age,
+          gender: meta.gender || prev.gender || 'Other',
+          bio: meta.bio !== undefined ? meta.bio : prev.bio,
+          verifiedCampus: !!(user.email_confirmed_at || (user as any).confirmed_at),
+        }));
+      }
+
+      // 3. Load swipe count from database
+      const swiped = await getSwipedIds(user.id);
+      setTotalSwipes(swiped.length);
+    } catch (err) {
+      console.warn('[UserContext] syncUserFromAuth warning:', err);
+    }
   }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (authUser) {
+      await syncUserFromAuth(authUser);
+    }
+  }, [authUser, syncUserFromAuth]);
 
   // Initialize and restore Supabase Auth Session
   useEffect(() => {
@@ -122,7 +149,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (mounted) {
           if (currentSession?.user) {
             setSession(currentSession);
-            syncUserFromAuth(currentSession.user);
+            await syncUserFromAuth(currentSession.user);
           } else {
             setSession(null);
             setAuthUser(null);
@@ -138,12 +165,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initSession();
 
     // Subscribe to auth state changes in real time
-    const { subscription } = onAuthStateChange((_event, newSession) => {
+    const { subscription } = onAuthStateChange(async (_event, newSession) => {
       if (!mounted) return;
 
       if (newSession?.user) {
         setSession(newSession);
-        syncUserFromAuth(newSession.user);
+        await syncUserFromAuth(newSession.user);
       } else {
         setSession(null);
         setAuthUser(null);
@@ -177,18 +204,22 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (currentUser.name && currentUser.name.trim().length >= 2) score++;
     if (currentUser.bio && currentUser.bio.trim().length >= 5) score++;
     if (currentUser.major && currentUser.major.trim().length > 0) score++;
-    if (currentUser.year) score++;
+    if (currentUser.university && currentUser.university.trim().length > 0) score++;
     if (currentUser.interests && currentUser.interests.length >= 3) score++;
 
     return Math.round((score / totalChecks) * 100);
   }, [currentUser]);
 
-  const updateProfile = useCallback((data: Partial<UserProfile>) => {
+  const updateProfile = useCallback(async (data: Partial<UserProfile>) => {
     setCurrentUser((prev) => ({
       ...prev,
       ...data,
     }));
-  }, []);
+
+    if (authUser) {
+      await updateDbProfile(authUser.id, data);
+    }
+  }, [authUser]);
 
   const uploadPhoto = useCallback((file: File) => {
     setIsUploading(true);
@@ -205,14 +236,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 250);
 
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setTimeout(() => {
+    reader.onloadend = async () => {
+      setTimeout(async () => {
         setUploadProgress(100);
         const newPhotoUrl = reader.result as string;
+        const newPhotos = [newPhotoUrl, ...(currentUser.photos || []).slice(1)];
+        
         setCurrentUser((prev) => ({
           ...prev,
-          photos: [newPhotoUrl, ...prev.photos.slice(1)],
+          photos: newPhotos,
         }));
+
+        if (authUser) {
+          await updateDbProfile(authUser.id, { photos: newPhotos });
+        }
 
         setTimeout(() => {
           setIsUploading(false);
@@ -221,7 +258,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, 1100);
     };
     reader.readAsDataURL(file);
-  }, []);
+  }, [authUser, currentUser.photos]);
 
   const incrementSwipes = useCallback(() => {
     setTotalSwipes((prev) => prev + 1);
@@ -233,7 +270,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = useCallback(async (data: SignupData, password: string): Promise<AuthResponse> => {
     const trimmedEmail = data.email.trim();
 
-    // Enforce .edu validation before sending to Supabase
     if (!isValidEduEmail(trimmedEmail)) {
       return {
         success: false,
@@ -267,7 +303,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (authData?.user) {
-      syncUserFromAuth(authData.user);
+      await syncUserFromAuth(authData.user);
       const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
       return {
         success: true,
@@ -287,9 +323,26 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: false, error: 'Please enter your email address' };
     }
 
-    // Support quick demo access if password is empty and matching mock demo
+    // Quick demo access fallback
     if (!password && trimmed === 'alex@university.edu') {
-      const demoUser = MOCK_PROFILES[0];
+      const demoUser: UserProfile = {
+        id: '00000000-0000-0000-0000-000000000001',
+        uid: '00000000-0000-0000-0000-000000000001',
+        name: 'Alex Johnson',
+        email: 'alex@university.edu',
+        age: 21,
+        gender: 'Non-binary',
+        major: 'Computer Science',
+        university: 'Stanford University',
+        gradYear: 2026,
+        bio: 'CS student passionate about building cool web apps.',
+        photos: ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'],
+        interests: ['Campus Life', 'Coding', 'Coffee'],
+        verifiedCampus: true,
+        distanceMiles: 0,
+        onlineStatus: 'online',
+        lastActive: new Date(),
+      };
       setCurrentUser(demoUser);
       setSession({
         access_token: 'demo-token',
@@ -348,7 +401,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (authData?.user) {
       setSession(authData.session);
-      syncUserFromAuth(authData.user);
+      await syncUserFromAuth(authData.user);
 
       const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
       if (!isConfirmed) {
@@ -401,6 +454,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         login,
         logout,
+        refreshProfile,
       }}
     >
       {children}

@@ -14,29 +14,30 @@ export const Home: React.FC = () => {
     nextProfile,
     thirdProfile,
     hasMore,
+    loading,
     handleSwipe,
     rewind,
     canRewind,
     newMatch,
+    createdMatchObj,
     dismissMatchModal,
     resetFeed
   } = useSwipe();
 
-  const { createMatch } = useMatches();
-  const { currentUser, incrementSwipes } = useUser();
+  const { createMatch, setActiveMatchId } = useMatches();
+  const { currentUser } = useUser();
   const navigate = useNavigate();
 
   const onSwipeAction = (direction: 'left' | 'right') => {
-    incrementSwipes();
     handleSwipe(direction);
   };
 
-  // Auto-dismiss match modal after 3 seconds if not clicked
+  // Auto-dismiss match modal after 4 seconds if not clicked
   useEffect(() => {
     if (newMatch) {
       const timer = setTimeout(() => {
         dismissMatchModal();
-      }, 3000);
+      }, 4000);
       return () => clearTimeout(timer);
     }
   }, [newMatch, dismissMatchModal]);
@@ -45,7 +46,14 @@ export const Home: React.FC = () => {
     <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
       {/* 3-Card Stack Area */}
       <div className="relative flex-1 mb-[12px] w-full min-h-0 overflow-hidden">
-        {hasMore && currentProfile ? (
+        {loading ? (
+          <div className="h-full rounded-3xl bg-[#333333] border border-[#4A4A4A] flex flex-col items-center justify-center p-8 text-center space-y-3 shadow-xl text-[#FFFFFF]">
+            <div className="w-14 h-14 rounded-full bg-[#1A1A1A] text-[#C9A84C] flex items-center justify-center border border-[#C9A84C]/40 shadow-glow-gold">
+              <RefreshCw className="w-6 h-6 animate-spin text-[#C9A84C]" />
+            </div>
+            <p className="text-xs font-semibold text-[#A0A0A0]">Loading student profiles...</p>
+          </div>
+        ) : hasMore && currentProfile ? (
           <>
             {thirdProfile && (
               <SwipeCard
@@ -88,7 +96,7 @@ export const Home: React.FC = () => {
             </div>
             <button
               onClick={resetFeed}
-              className="px-6 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-md hover:bg-[#C9A84C]/90 flex items-center gap-1.5 transition"
+              className="px-6 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-md hover:bg-[#C9A84C]/90 flex items-center gap-1.5 transition active:scale-95"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               Reset Discovery Feed
@@ -103,7 +111,7 @@ export const Home: React.FC = () => {
         canRewind={canRewind}
         onPass={() => onSwipeAction('left')}
         onLike={() => onSwipeAction('right')}
-        disabled={!hasMore}
+        disabled={loading || !hasMore}
       />
 
       {/* "IT'S A MATCH!" CELEBRATION MODAL */}
@@ -175,7 +183,11 @@ export const Home: React.FC = () => {
               <div className="space-y-2.5 pt-1">
                 <button
                   onClick={() => {
-                    if (newMatch) createMatch(newMatch);
+                    if (createdMatchObj) {
+                      setActiveMatchId(createdMatchObj.id);
+                    } else if (newMatch) {
+                      createMatch(newMatch);
+                    }
                     dismissMatchModal();
                     navigate('/chat');
                   }}
@@ -198,3 +210,5 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
+export default Home;
