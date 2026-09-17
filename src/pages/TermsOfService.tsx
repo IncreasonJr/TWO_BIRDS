@@ -177,3 +177,6 @@ export const TermsOfService: React.FC = () => {
     </div>
   );
 };
+
+export default TermsOfService;
+

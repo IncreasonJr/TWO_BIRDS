@@ -16,7 +16,11 @@ import {
   updateProfile as updateDbProfile,
   createDefaultProfile,
   getSwipedIds,
+  uploadPhoto as uploadPhotoToStorage,
+  deletePhoto as deletePhotoFromStorage,
+  updateProfilePhotos,
 } from '../lib/databaseService';
+import { optimizeImage } from '../lib/imageOptimizer';
 
 export interface SignupData {
   name: string;
@@ -46,7 +50,9 @@ interface UserContextType {
   totalSwipes: number;
   completionPercentage: number;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
-  uploadPhoto: (file: File) => void;
+  uploadPhoto: (file: File) => Promise<{ success: boolean; error?: string; url?: string }>;
+  deletePhoto: (photoUrl: string) => Promise<{ success: boolean; error?: string }>;
+  setPrimaryPhoto: (photoIndex: number) => Promise<{ success: boolean; error?: string }>;
   incrementSwipes: () => void;
   signup: (data: SignupData, password: string) => Promise<AuthResponse>;
   login: (email: string, password?: string) => Promise<AuthResponse>;
@@ -121,6 +127,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           age: meta.age ? Number(meta.age) : prev.age,
           gender: meta.gender || prev.gender || 'Other',
           bio: meta.bio !== undefined ? meta.bio : prev.bio,
+          photos: [],
           verifiedCampus: !!(user.email_confirmed_at || (user as any).confirmed_at),
         }));
       }
@@ -221,44 +228,133 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [authUser]);
 
-  const uploadPhoto = useCallback((file: File) => {
-    setIsUploading(true);
-    setUploadProgress(10);
+  const uploadPhoto = useCallback(
+    async (file: File): Promise<{ success: boolean; error?: string; url?: string }> => {
+      const currentPhotos = currentUser.photos || [];
+      if (currentPhotos.length >= 6) {
+        return { success: false, error: 'Maximum 6 photos allowed. Please delete a photo first.' };
+      }
 
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 90;
+      setIsUploading(true);
+      setUploadProgress(15);
+
+      try {
+        // 1. Optimize image (Canvas resize to max 1080x1080, JPEG 80%, type/size validation)
+        const optimizedBlob = await optimizeImage(file);
+        setUploadProgress(40);
+
+        let newPhotoUrl: string;
+
+        // 2. Real upload to Supabase Storage if user is authenticated
+        if (authUser) {
+          setUploadProgress(65);
+          const res = await uploadPhotoToStorage(authUser.id, optimizedBlob);
+          if (!res.success || !res.url) {
+            throw new Error(res.error || 'Failed to upload photo to storage.');
+          }
+          newPhotoUrl = res.url;
+        } else {
+          // Demo/offline mode: create data URL
+          newPhotoUrl = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(optimizedBlob);
+          });
         }
-        return prev + 25;
-      });
-    }, 250);
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      setTimeout(async () => {
+        setUploadProgress(85);
+
+        // 3. Append to user's photos array
+        const newPhotos = [...currentPhotos, newPhotoUrl];
+
+        setCurrentUser((prev) => ({
+          ...prev,
+          photos: newPhotos,
+        }));
+
+        // 4. Update Supabase profiles table
+        if (authUser) {
+          const updateRes = await updateProfilePhotos(authUser.id, newPhotos);
+          if (!updateRes.success) {
+            console.warn('[UserContext] Profile photos db sync error:', updateRes.error);
+          }
+        }
+
         setUploadProgress(100);
-        const newPhotoUrl = reader.result as string;
-        const newPhotos = [newPhotoUrl, ...(currentUser.photos || []).slice(1)];
-        
+
+        setTimeout(() => {
+          setIsUploading(false);
+          setUploadProgress(0);
+        }, 400);
+
+        return { success: true, url: newPhotoUrl };
+      } catch (err: any) {
+        console.error('[UserContext] uploadPhoto error:', err);
+        setIsUploading(false);
+        setUploadProgress(0);
+        return { success: false, error: err?.message || 'Failed to upload photo' };
+      }
+    },
+    [authUser, currentUser.photos]
+  );
+
+  const deletePhoto = useCallback(
+    async (photoUrl: string): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const currentPhotos = currentUser.photos || [];
+        const newPhotos = currentPhotos.filter((p) => p !== photoUrl);
+
+        // Update local state immediately
         setCurrentUser((prev) => ({
           ...prev,
           photos: newPhotos,
         }));
 
         if (authUser) {
-          await updateDbProfile(authUser.id, { photos: newPhotos });
+          // 1. Delete from Supabase Storage
+          await deletePhotoFromStorage(authUser.id, photoUrl);
+          // 2. Update profiles table
+          await updateProfilePhotos(authUser.id, newPhotos);
         }
 
-        setTimeout(() => {
-          setIsUploading(false);
-          setUploadProgress(0);
-        }, 400);
-      }, 1100);
-    };
-    reader.readAsDataURL(file);
-  }, [authUser, currentUser.photos]);
+        return { success: true };
+      } catch (err: any) {
+        console.error('[UserContext] deletePhoto error:', err);
+        return { success: false, error: err?.message || 'Failed to delete photo' };
+      }
+    },
+    [authUser, currentUser.photos]
+  );
+
+  const setPrimaryPhoto = useCallback(
+    async (photoIndex: number): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const currentPhotos = [...(currentUser.photos || [])];
+        if (photoIndex <= 0 || photoIndex >= currentPhotos.length) {
+          return { success: true };
+        }
+
+        // Move item at photoIndex to index 0
+        const [selected] = currentPhotos.splice(photoIndex, 1);
+        const newPhotos = [selected, ...currentPhotos];
+
+        setCurrentUser((prev) => ({
+          ...prev,
+          photos: newPhotos,
+        }));
+
+        if (authUser) {
+          await updateProfilePhotos(authUser.id, newPhotos);
+        }
+
+        return { success: true };
+      } catch (err: any) {
+        console.error('[UserContext] setPrimaryPhoto error:', err);
+        return { success: false, error: err?.message || 'Failed to set primary photo' };
+      }
+    },
+    [authUser, currentUser.photos]
+  );
 
   const incrementSwipes = useCallback(() => {
     setTotalSwipes((prev) => prev + 1);
@@ -450,6 +546,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         completionPercentage,
         updateProfile,
         uploadPhoto,
+        deletePhoto,
+        setPrimaryPhoto,
         incrementSwipes,
         signup,
         login,

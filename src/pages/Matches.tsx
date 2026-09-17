@@ -23,6 +23,15 @@ export const Matches: React.FC = () => {
     );
   }, [matches, searchQuery]);
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="flex flex-col h-full flex-1 pb-20 max-w-md mx-auto px-4 py-3 space-y-4 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF]">
       {/* Search Bar */}
@@ -69,24 +78,33 @@ export const Matches: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-1">
-              {matches.map((match) => (
-                <button
-                  key={match.id}
-                  onClick={() => handleSelectMatch(match.id)}
-                  className="flex flex-col items-center gap-1.5 group flex-shrink-0"
-                >
-                  <div className="relative p-0.5 rounded-full bg-[#C9A84C] shadow-glow-gold group-hover:scale-105 transition-transform duration-300">
-                    <img
-                      src={match.photos?.[0] || match.user?.photos?.[0] || '/logo192.png'}
-                      alt={match.name}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-[#1A1A1A]"
-                    />
-                  </div>
-                  <span className="text-[11px] font-bold text-[#FFFFFF] group-hover:text-[#C9A84C] truncate max-w-[64px]">
-                    {match.name.split(' ')[0]}
-                  </span>
-                </button>
-              ))}
+              {matches.map((match) => {
+                const photo = match.photos?.[0] || match.user?.photos?.[0];
+                return (
+                  <button
+                    key={match.id}
+                    onClick={() => handleSelectMatch(match.id)}
+                    className="flex flex-col items-center gap-1.5 group flex-shrink-0"
+                  >
+                    <div className="relative p-0.5 rounded-full bg-[#C9A84C] shadow-glow-gold group-hover:scale-105 transition-transform duration-300">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt={match.name}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-[#1A1A1A]"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-[#1A1A1A] border-2 border-[#1A1A1A] text-[#C9A84C] flex items-center justify-center font-extrabold text-sm font-serif">
+                          {getInitials(match.name)}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-bold text-[#FFFFFF] group-hover:text-[#C9A84C] truncate max-w-[64px]">
+                      {match.name.split(' ')[0]}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -97,19 +115,27 @@ export const Matches: React.FC = () => {
             </h3>
 
             <div className="space-y-2">
-              {filteredMatches.map((match) => (
-                <div
-                  key={match.id}
-                  onClick={() => handleSelectMatch(match.id)}
-                  className="bg-[#333333] border border-[#4A4A4A] p-3.5 rounded-2xl flex items-center gap-3 hover:border-[#C9A84C]/60 cursor-pointer transition-all duration-300 shadow-sm group"
-                >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={match.photos?.[0] || match.user?.photos?.[0] || '/logo192.png'}
-                      alt={match.name}
-                      className="w-12 h-12 rounded-2xl object-cover border border-[#4A4A4A]"
-                    />
-                  </div>
+              {filteredMatches.map((match) => {
+                const photo = match.photos?.[0] || match.user?.photos?.[0];
+                return (
+                  <div
+                    key={match.id}
+                    onClick={() => handleSelectMatch(match.id)}
+                    className="bg-[#333333] border border-[#4A4A4A] p-3.5 rounded-2xl flex items-center gap-3 hover:border-[#C9A84C]/60 cursor-pointer transition-all duration-300 shadow-sm group"
+                  >
+                    <div className="relative flex-shrink-0">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt={match.name}
+                          className="w-12 h-12 rounded-2xl object-cover border border-[#4A4A4A]"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-[#1A1A1A] border border-[#4A4A4A] text-[#C9A84C] flex items-center justify-center font-extrabold text-xs font-serif">
+                          {getInitials(match.name)}
+                        </div>
+                      )}
+                    </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -133,7 +159,8 @@ export const Matches: React.FC = () => {
 
                   <ChevronRight className="w-4 h-4 text-[#A0A0A0] group-hover:text-[#C9A84C] transition-colors" />
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
         </>

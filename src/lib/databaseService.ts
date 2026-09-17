@@ -13,9 +13,7 @@ export function mapProfileRowToUserProfile(row: any): UserProfile {
     university: row.university || 'Stanford University',
     gradYear: 2026,
     bio: row.bio || '',
-    photos: Array.isArray(row.photos) && row.photos.length > 0
-      ? row.photos
-      : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'],
+    photos: Array.isArray(row.photos) ? row.photos : [],
     interests: Array.isArray(row.interests) && row.interests.length > 0
       ? row.interests
       : ['Campus Life', 'Coffee', 'Study Groups'],
@@ -131,9 +129,7 @@ export async function createDefaultProfile(
       major: metadata.major || 'Undecided',
       university: metadata.university || 'Stanford University',
       bio: metadata.bio || 'Excited to connect with fellow students on campus!',
-      photos: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-      ],
+      photos: Array.isArray(metadata.photos) ? metadata.photos : [],
       interests: ['Campus Life', 'Coffee', 'Study Groups'],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -480,3 +476,104 @@ export function subscribeToMessages(
     supabase.removeChannel(channel);
   };
 }
+
+/* ==========================================================================
+   STORAGE & PHOTOS
+   ========================================================================== */
+
+export async function uploadPhoto(
+  userId: string,
+  fileOrBlob: File | Blob
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  try {
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
+    const filePath = `${userId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-photos')
+      .upload(filePath, fileOrBlob, {
+        contentType: 'image/jpeg',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[databaseService] uploadPhoto error:', uploadError.message);
+      return { success: false, error: uploadError.message };
+    }
+
+    const { data } = supabase.storage
+      .from('profile-photos')
+      .getPublicUrl(filePath);
+
+    return { success: true, url: data.publicUrl };
+  } catch (err: any) {
+    console.error('[databaseService] uploadPhoto unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to upload photo' };
+  }
+}
+
+export async function deletePhoto(
+  userId: string,
+  photoUrl: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!photoUrl) return { success: true };
+
+    const bucketIdentifier = '/profile-photos/';
+    const bucketIndex = photoUrl.indexOf(bucketIdentifier);
+
+    // If not a Supabase storage photo (e.g. Unsplash URL or external link), nothing to remove from bucket
+    if (bucketIndex === -1) {
+      return { success: true };
+    }
+
+    const filePath = decodeURIComponent(
+      photoUrl.substring(bucketIndex + bucketIdentifier.length).split('?')[0]
+    );
+
+    if (!filePath.startsWith(userId)) {
+      console.warn('[databaseService] Security check: photo does not belong to user', filePath, userId);
+      return { success: false, error: 'Unauthorized to delete this photo' };
+    }
+
+    const { error } = await supabase.storage
+      .from('profile-photos')
+      .remove([filePath]);
+
+    if (error) {
+      console.warn('[databaseService] deletePhoto storage error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] deletePhoto unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to delete photo' };
+  }
+}
+
+export async function updateProfilePhotos(
+  userId: string,
+  photos: string[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        photos,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('[databaseService] updateProfilePhotos error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('[databaseService] updateProfilePhotos unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to update profile photos' };
+  }
+}
+

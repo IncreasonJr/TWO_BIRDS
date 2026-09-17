@@ -32,17 +32,30 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
     }
   };
 
+  const photos = Array.isArray(profile.photos) ? profile.photos : [];
+  const currentPhoto = photos.length > 0 ? photos[photoIndex] : null;
+  const firstPhoto = photos.length > 0 ? photos[0] : null;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   const nextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (profile.photos.length > 1) {
-      setPhotoIndex((prev) => (prev + 1) % profile.photos.length);
+    if (photos.length > 1) {
+      setPhotoIndex((prev) => (prev + 1) % photos.length);
     }
   };
 
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (profile.photos.length > 1) {
-      setPhotoIndex((prev) => (prev - 1 + profile.photos.length) % profile.photos.length);
+    if (photos.length > 1) {
+      setPhotoIndex((prev) => (prev - 1 + photos.length) % photos.length);
     }
   };
 
@@ -54,11 +67,19 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
           isThird ? 'scale-90 translate-y-6 opacity-30 z-0' : 'scale-95 translate-y-3 opacity-60 z-10'
         }`}
       >
-        <img
-          src={profile.photos[0]}
-          alt={profile.name}
-          className="w-full h-full object-cover filter brightness-90"
-        />
+        {firstPhoto ? (
+          <img
+            src={firstPhoto}
+            alt={profile.name}
+            className="w-full h-full object-cover filter brightness-90"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-[#333333] via-[#1A1A1A] to-[#1A1A1A] flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-[#C9A84C]/20 border-2 border-[#C9A84C] text-[#C9A84C] flex items-center justify-center font-extrabold text-3xl font-serif">
+              {getInitials(profile.name)}
+            </div>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A] via-transparent to-transparent" />
       </div>
     );
@@ -76,16 +97,27 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
         className="absolute inset-0 z-20 rounded-3xl overflow-hidden bg-[#333333] border border-[#4A4A4A] shadow-2xl cursor-grab select-none touch-none"
       >
         <div className="relative w-full h-full">
-          <img
-            src={profile.photos[photoIndex]}
-            alt={profile.name}
-            className="w-full h-full object-cover pointer-events-none"
-          />
+          {currentPhoto ? (
+            <img
+              src={currentPhoto}
+              alt={profile.name}
+              className="w-full h-full object-cover pointer-events-none"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#333333] via-[#1A1A1A] to-[#0D0D0D] flex flex-col items-center justify-center relative pointer-events-none">
+              <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-[#C9A84C] to-[#E5C77A] text-[#1A1A1A] shadow-glow-gold flex items-center justify-center font-extrabold text-3xl font-serif mb-16 border-2 border-[#FFFFFF]/20">
+                {getInitials(profile.name)}
+              </div>
+              <div className="absolute top-6 px-3 py-1 rounded-full bg-[#333333]/80 border border-[#C9A84C]/40 text-[#C9A84C] text-[10px] font-bold">
+                Campus Student
+              </div>
+            </div>
+          )}
 
           {/* Photo Indicator Dots */}
-          {profile.photos.length > 1 && (
+          {photos.length > 1 && (
             <div className="absolute top-3 left-4 right-4 z-20 flex gap-1.5">
-              {profile.photos.map((_, i) => (
+              {photos.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1 flex-1 rounded-full transition-all duration-300 ${
@@ -97,7 +129,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
           )}
 
           {/* Left/Right Photo Tap Triggers */}
-          {profile.photos.length > 1 && (
+          {photos.length > 1 && (
             <>
               <button
                 onClick={prevPhoto}
@@ -210,14 +242,22 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
 
               {/* Photo Carousel in Modal */}
               <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-[#333333]">
-                <img
-                  src={profile.photos[photoIndex]}
-                  alt={profile.name}
-                  className="w-full h-full object-cover"
-                />
-                {profile.photos.length > 1 && (
+                {currentPhoto ? (
+                  <img
+                    src={currentPhoto}
+                    alt={profile.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-[#333333] via-[#1A1A1A] to-[#0D0D0D] flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-[#C9A84C] text-[#1A1A1A] flex items-center justify-center font-extrabold text-2xl font-serif">
+                      {getInitials(profile.name)}
+                    </div>
+                  </div>
+                )}
+                {photos.length > 1 && (
                   <div className="absolute bottom-3 inset-x-0 flex justify-center gap-1.5 px-4">
-                    {profile.photos.map((_, i) => (
+                    {photos.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setPhotoIndex(i)}

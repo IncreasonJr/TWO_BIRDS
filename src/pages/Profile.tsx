@@ -22,7 +22,11 @@ import {
   RefreshCw,
   RotateCcw,
   FileText,
-  School
+  School,
+  Plus,
+  Trash2,
+  Star,
+  Image as ImageIcon
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 
@@ -56,6 +60,8 @@ export const Profile: React.FC = () => {
     completionPercentage,
     updateProfile,
     uploadPhoto,
+    deletePhoto,
+    setPrimaryPhoto,
     logout
   } = useUser();
 
@@ -67,6 +73,7 @@ export const Profile: React.FC = () => {
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>('');
   const [activePlaceholderModal, setActivePlaceholderModal] = useState<string | null>(null);
+  const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
 
   // Form State
   const [formName, setFormName] = useState<string>(currentUser.name);
@@ -133,10 +140,48 @@ export const Profile: React.FC = () => {
     triggerToast('Profile updated successfully!');
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      uploadPhoto(file);
+    e.target.value = '';
+    if (!file) return;
+
+    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      triggerToast('Only JPG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      triggerToast('File size must be under 5MB.');
+      return;
+    }
+
+    const result = await uploadPhoto(file);
+    if (result.success) {
+      triggerToast('Photo uploaded successfully!');
+    } else {
+      triggerToast(result.error || 'Failed to upload photo.');
+    }
+  };
+
+  const handleSetPrimary = async (index: number) => {
+    const res = await setPrimaryPhoto(index);
+    if (res.success) {
+      triggerToast('Primary photo updated!');
+    } else {
+      triggerToast(res.error || 'Failed to update primary photo.');
+    }
+  };
+
+  const confirmDeletePhoto = async () => {
+    if (!photoToDelete) return;
+    const url = photoToDelete;
+    setPhotoToDelete(null);
+    const res = await deletePhoto(url);
+    if (res.success) {
+      triggerToast('Photo deleted from profile.');
+    } else {
+      triggerToast(res.error || 'Failed to delete photo.');
     }
   };
 
@@ -228,8 +273,9 @@ export const Profile: React.FC = () => {
             <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
             <input
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
+              disabled={isUploading}
               className="hidden"
             />
           </label>
@@ -288,6 +334,109 @@ export const Profile: React.FC = () => {
           </div>
           <p className="text-lg font-extrabold text-[#C9A84C]">{completionPercentage}%</p>
           <p className="text-[9px] font-bold text-[#A0A0A0] uppercase tracking-wider">Complete</p>
+        </div>
+      </div>
+
+      {/* 2.5 PHOTO GALLERY (UP TO 6 PHOTOS) */}
+      <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-3.5 space-y-3 shadow-md shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-[11px] font-bold text-[#C9A84C] uppercase tracking-wider">
+              Photo Gallery
+            </h3>
+            <span className="text-[10px] text-[#A0A0A0] font-semibold">
+              ({(currentUser.photos || []).length}/6)
+            </span>
+          </div>
+          <span className="text-[10px] text-[#A0A0A0] font-medium">Slot 1 is your cover</span>
+        </div>
+
+        {(!currentUser.photos || currentUser.photos.length === 0) && (
+          <div className="p-3 rounded-xl bg-[#C9A84C]/10 border border-[#C9A84C]/30 text-center space-y-1">
+            <p className="text-xs font-bold text-[#C9A84C]">Add your first photo to start swiping</p>
+            <p className="text-[10px] text-[#A0A0A0]">Two Birds profiles require at least 1 photo for discovery.</p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2.5">
+          {Array.from({ length: 6 }).map((_, index) => {
+            const photoUrl = currentUser.photos?.[index];
+            const isPrimary = index === 0;
+
+            if (photoUrl) {
+              return (
+                <div
+                  key={index}
+                  className="aspect-[3/4] rounded-2xl relative overflow-hidden border border-[#4A4A4A] group shadow-sm bg-[#1A1A1A]"
+                >
+                  <img
+                    src={photoUrl}
+                    alt={`Photo ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+
+                  {/* Primary Badge or Make Primary Button */}
+                  {isPrimary ? (
+                    <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-[9px] shadow-glow-gold flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 fill-current stroke-none" /> Primary
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSetPrimary(index)}
+                      className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-[#1A1A1A]/85 hover:bg-[#C9A84C] text-[#FFFFFF] hover:text-[#1A1A1A] font-bold text-[9px] border border-[#FFFFFF]/20 transition shadow"
+                    >
+                      Set Cover
+                    </button>
+                  )}
+
+                  {/* Delete Button */}
+                  <button
+                    type="button"
+                    onClick={() => setPhotoToDelete(photoUrl)}
+                    className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-[#1A1A1A]/85 hover:bg-red-500 text-[#FFFFFF] transition shadow"
+                    title="Delete Photo"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            }
+
+            // Next available upload slot
+            if (index === (currentUser.photos || []).length) {
+              return (
+                <label
+                  key={index}
+                  className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[#C9A84C]/60 hover:border-[#C9A84C] bg-[#1A1A1A]/40 hover:bg-[#C9A84C]/10 flex flex-col items-center justify-center cursor-pointer transition p-2 text-center group"
+                >
+                  <div className="p-2 rounded-full bg-[#C9A84C]/20 text-[#C9A84C] group-hover:scale-110 transition">
+                    <Plus className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                  <span className="text-[10px] font-extrabold text-[#C9A84C] mt-1.5">Add Photo</span>
+                  <span className="text-[8px] text-[#A0A0A0]">Max 5MB</span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                    className="hidden"
+                  />
+                </label>
+              );
+            }
+
+            // Remaining empty slots
+            return (
+              <div
+                key={index}
+                className="aspect-[3/4] rounded-2xl border border-dashed border-[#4A4A4A]/50 bg-[#1A1A1A]/20 flex flex-col items-center justify-center opacity-40 text-center"
+              >
+                <ImageIcon className="w-4 h-4 text-[#777777]" />
+                <span className="text-[9px] text-[#777777] font-semibold mt-1">Slot {index + 1}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -751,6 +900,51 @@ export const Profile: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* PHOTO DELETION CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {photoToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A1A1A]/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              className="bg-[#333333] border border-[#4A4A4A] rounded-3xl p-6 text-center space-y-4 shadow-2xl max-w-xs w-full text-[#FFFFFF]"
+            >
+              <div className="w-12 h-12 mx-auto rounded-full bg-red-500/20 text-red-400 flex items-center justify-center border border-red-500/40">
+                <Trash2 className="w-6 h-6" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-extrabold text-[#FFFFFF] font-serif">Delete Photo?</h3>
+                <p className="text-xs text-[#A0A0A0] mt-1.5 leading-relaxed font-medium">
+                  Are you sure you want to remove this photo from your profile? This cannot be undone.
+                </p>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={confirmDeletePhoto}
+                  className="w-full py-2.5 rounded-2xl bg-red-500 hover:bg-red-600 text-[#FFFFFF] font-extrabold text-xs shadow-md transition active:scale-95"
+                >
+                  Confirm Delete
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotoToDelete(null)}
+                  className="w-full py-2.5 rounded-2xl bg-[#1A1A1A] border border-[#4A4A4A] text-[#FFFFFF] font-bold text-xs transition hover:bg-[#1A1A1A]/80"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
+
+export default Profile;
+

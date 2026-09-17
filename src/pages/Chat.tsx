@@ -152,7 +152,21 @@ export const Chat: React.FC = () => {
     verifiedCampus: true,
   };
 
-  const matchPhotos = matchUser.photos && matchUser.photos.length > 0 ? matchUser.photos : activeMatch.photos;
+  const matchPhotos = (matchUser.photos && matchUser.photos.length > 0)
+    ? matchUser.photos
+    : (activeMatch.photos && activeMatch.photos.length > 0)
+    ? activeMatch.photos
+    : [];
+  const currentMatchPhoto = matchPhotos.length > 0 ? matchPhotos[0] : null;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <div className="flex flex-col h-full flex-1 max-w-md mx-auto relative overflow-hidden bg-[#1A1A1A] text-[#FFFFFF] select-none">
@@ -174,11 +188,17 @@ export const Chat: React.FC = () => {
             title="View Profile"
           >
             <div className="relative">
-              <img
-                src={matchPhotos[0]}
-                alt={activeMatch.name}
-                className="w-10 h-10 rounded-full object-cover border-2 border-[#C9A84C] group-hover:scale-105 transition-transform duration-200"
-              />
+              {currentMatchPhoto ? (
+                <img
+                  src={currentMatchPhoto}
+                  alt={activeMatch.name}
+                  className="w-10 h-10 rounded-full object-cover border-2 border-[#C9A84C] group-hover:scale-105 transition-transform duration-200"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-[#333333] border-2 border-[#C9A84C] text-[#C9A84C] flex items-center justify-center font-extrabold text-xs font-serif">
+                  {getInitials(activeMatch.name)}
+                </div>
+              )}
             </div>
 
             <div>
@@ -243,11 +263,17 @@ export const Chat: React.FC = () => {
             >
               <div className="flex items-end gap-1.5 max-w-[85%] sm:max-w-[80%]">
                 {!isMe && (
-                  <img
-                    src={matchPhotos[0]}
-                    alt={activeMatch.name}
-                    className="w-6 h-6 rounded-full object-cover border border-[#C9A84C] mb-1 flex-shrink-0"
-                  />
+                  currentMatchPhoto ? (
+                    <img
+                      src={currentMatchPhoto}
+                      alt={activeMatch.name}
+                      className="w-6 h-6 rounded-full object-cover border border-[#C9A84C] mb-1 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-[#333333] border border-[#C9A84C] text-[#C9A84C] flex items-center justify-center font-bold text-[9px] mb-1 flex-shrink-0">
+                      {getInitials(activeMatch.name)}
+                    </div>
+                  )
                 )}
                 <div
                   className={`px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed shadow-sm break-words overflow-hidden max-w-full ${
@@ -340,11 +366,19 @@ export const Chat: React.FC = () => {
               <div className="p-4 overflow-y-auto space-y-4 flex-1">
                 {/* Photo Gallery Carousel */}
                 <div className="relative rounded-3xl overflow-hidden h-72 w-full bg-[#333333] border border-[#4A4A4A] shadow-md">
-                  <img
-                    src={matchPhotos[photoIndex] || matchPhotos[0]}
-                    alt={matchUser.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {matchPhotos.length > 0 ? (
+                    <img
+                      src={matchPhotos[photoIndex] || matchPhotos[0]}
+                      alt={matchUser.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-[#333333] via-[#1A1A1A] to-[#0D0D0D] flex items-center justify-center">
+                      <div className="w-24 h-24 rounded-full bg-[#C9A84C] text-[#1A1A1A] flex items-center justify-center font-extrabold text-3xl font-serif">
+                        {getInitials(matchUser.name)}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Photo Counter */}
                   {matchPhotos.length > 1 && (
@@ -467,3 +501,6 @@ export const Chat: React.FC = () => {
     </div>
   );
 };
+
+export default Chat;
+
