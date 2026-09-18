@@ -1,10 +1,12 @@
-import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { TopNavbar, BottomTabNav } from './components/Navigation';
 import { InstallPWA } from './components/InstallPWA';
 import { UpdateNotification } from './components/UpdateNotification';
+import { NotificationPermissionPrompt } from './components/NotificationPermissionPrompt';
 import { MatchProvider, useMatches } from './hooks/useMatches';
 import { UserProvider, useUser } from './context/UserContext';
+import { onNotificationClick } from './lib/oneSignalClient';
 import { Sparkles, RefreshCw } from 'lucide-react';
 
 // Route-based code splitting for optimal bundle size & fast initial load
@@ -13,6 +15,7 @@ const Matches = lazy(() => import('./pages/Matches'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AddPhotos = lazy(() => import('./pages/AddPhotos'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const Signup = lazy(() => import('./pages/Signup'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
@@ -68,13 +71,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/signup" replace />;
   }
 
-  // Mandatory photo gate: If user has 0 photos and is not on /add-photos or /profile, redirect to /add-photos
+  // Mandatory photo gate: If user has 0 photos and is not on allowed setup pages, redirect to /add-photos
   const hasPhotos = currentUser.photos && currentUser.photos.length > 0;
   const isAllowedWithoutPhotos =
     location.pathname === '/add-photos' ||
     location.pathname === '/profile' ||
     location.pathname === '/delete-account' ||
-    location.pathname === '/blocked-users';
+    location.pathname === '/blocked-users' ||
+    location.pathname === '/notifications';
 
   if (!hasPhotos && !isAllowedWithoutPhotos) {
     return <Navigate to="/add-photos" replace />;
@@ -87,6 +91,26 @@ const AppContent: React.FC = () => {
   const { totalUnread } = useMatches();
   const { isAuthenticated } = useUser();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle OneSignal push notification clicks globally
+  useEffect(() => {
+    onNotificationClick((event: any) => {
+      const data = event?.notification?.additionalData;
+      if (data?.type === 'message' || data?.type === 'match') {
+        const matchId = data?.matchId || data?.match_id;
+        if (matchId) {
+          navigate(`/chat?matchId=${encodeURIComponent(matchId)}`);
+        } else {
+          navigate('/matches');
+        }
+      } else if (data?.url) {
+        navigate(data.url);
+      } else {
+        navigate('/notifications');
+      }
+    });
+  }, [navigate]);
 
   const publicRoutes = ['/signup', '/login', '/verify-email', '/forgot-password', '/privacy', '/terms', '/community-guidelines'];
   const isPublicRoute = publicRoutes.some((route) => location.pathname === route);
@@ -94,7 +118,8 @@ const AppContent: React.FC = () => {
     location.pathname === '/add-photos' ||
     location.pathname === '/blocked-users' ||
     location.pathname === '/delete-account' ||
-    location.pathname === '/community-guidelines';
+    location.pathname === '/community-guidelines' ||
+    location.pathname === '/notifications';
   const showNav = !isPublicRoute && !isDedicatedScreen && isAuthenticated;
 
   return (
@@ -103,6 +128,7 @@ const AppContent: React.FC = () => {
       <div className={`w-full max-w-md mx-auto h-full flex flex-col bg-[#1A1A1A] border-x border-[#4A4A4A] shadow-2xl relative overflow-hidden ${showNav ? 'pb-14' : ''}`}>
         <UpdateNotification />
         <InstallPWA variant="banner" />
+        <NotificationPermissionPrompt />
         {showNav && <TopNavbar />}
         <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
           <Suspense fallback={<PageLoadingFallback />}>
@@ -113,6 +139,7 @@ const AppContent: React.FC = () => {
               <Route path="/matches" element={<ProtectedRoute><Matches /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
               {/* Safety & Moderation Routes */}
               <Route path="/blocked-users" element={<ProtectedRoute><BlockedUsers /></ProtectedRoute>} />

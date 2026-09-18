@@ -73,3 +73,26 @@ export interface FilterSettings {
   onlyVerified: boolean;
   majorFilter: string;
 }
+
+export type NotificationType = 'match' | 'message' | 'like' | 'system';
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  body: string;
+  data?: Record<string, any>;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface NotificationPreferences {
+  userId: string;
+  pushEnabled: boolean;
+  matchesEnabled: boolean;
+  messagesEnabled: boolean;
+  likesEnabled: boolean;
+  updatedAt?: string;
+}
+

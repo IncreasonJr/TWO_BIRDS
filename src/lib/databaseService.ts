@@ -1,6 +1,7 @@
 import { supabase } from './supabaseClient';
-import { UserProfile, Match, Message } from '../types';
+import { UserProfile, Match, Message, AppNotification, NotificationPreferences, NotificationType } from '../types';
 import { filterMessage } from './profanityFilter';
+import { sendPushNotification } from './oneSignalApi';
 
 export function mapProfileRowToUserProfile(row: any): UserProfile {
   return {
@@ -243,6 +244,16 @@ export async function checkForMatch(
     }
 
     const partnerProfile = await getProfile(swipedId);
+    const swiperProfile = await getProfile(swiperId);
+
+    // Trigger match notifications for both students (fire-and-forget)
+    notifyMatchCreated(
+      matchRow.id,
+      swiperId,
+      swipedId,
+      swiperProfile?.name || 'A classmate',
+      partnerProfile?.name || 'A classmate'
+    ).catch((err) => console.warn('[databaseService] notifyMatchCreated error:', err));
 
     const matchObj: Match = {
       id: matchRow.id,
@@ -432,6 +443,33 @@ export async function sendMessage(
       console.error('[databaseService] sendMessage error:', error);
       return null;
     }
+
+    // Trigger notification to recipient (fire-and-forget)
+    (async () => {
+      try {
+        const { data: mRow } = await supabase
+          .from('matches')
+          .select('user_a, user_b')
+          .eq('id', matchId)
+          .maybeSingle();
+
+        if (mRow) {
+          const recipientId = mRow.user_a === senderId ? mRow.user_b : mRow.user_a;
+          if (recipientId) {
+            const senderProfile = await getProfile(senderId);
+            const preview = messageType === 'voice' ? 'Sent a voice note 🎙️' : sanitized;
+            notifyNewMessage(
+              matchId,
+              recipientId,
+              senderProfile?.name || 'Your match',
+              preview
+            );
+          }
+        }
+      } catch (notifErr) {
+        console.warn('[databaseService] notifyNewMessage fire-and-forget error:', notifErr);
+      }
+    })();
 
     return {
       id: data.id,
@@ -814,6 +852,9 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
     await supabase.from('reports').delete().or(`reporter_id.eq.${userId},reported_id.eq.${userId}`);
     // Delete blocks
     await supabase.from('blocks').delete().or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+    // Delete notifications & preferences
+    await supabase.from('notifications').delete().eq('user_id', userId);
+    await supabase.from('notification_preferences').delete().eq('user_id', userId);
     // Delete profile
     const { error: profErr } = await supabase.from('profiles').delete().eq('id', userId);
     if (profErr) {
@@ -829,4 +870,363 @@ export async function deleteAccount(userId: string): Promise<{ success: boolean;
     return { success: false, error: err?.message || 'Failed to delete account' };
   }
 }
+
+/* ==========================================================================
+   NOTIFICATIONS & PREFERENCES
+   ========================================================================== */
+
+export function mapNotificationRow(row: any): AppNotification {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type as NotificationType,
+    title: row.title,
+    body: row.body,
+    data: row.data || {},
+    isRead: row.is_read,
+    createdAt: row.created_at || new Date().toISOString(),
+  };
+}
+
+export function mapPreferencesRow(row: any, userId: string): NotificationPreferences {
+  if (!row) {
+    return {
+      userId,
+      pushEnabled: true,
+      matchesEnabled: true,
+      messagesEnabled: true,
+      likesEnabled: true,
+    };
+  }
+  return {
+    userId: row.user_id || userId,
+    pushEnabled: row.push_enabled ?? true,
+    matchesEnabled: row.matches_enabled ?? true,
+    messagesEnabled: row.messages_enabled ?? true,
+    likesEnabled: row.likes_enabled ?? true,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function createNotification(
+  userId: string,
+  type: NotificationType,
+  title: string,
+  body: string,
+  data: Record<string, any> = {}
+): Promise<{ success: boolean; notification?: AppNotification; error?: string }> {
+  try {
+    const { data: row, error } = await supabase
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        type,
+        title,
+        body,
+        data,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      })
+      .select('*')
+      .single();
+
+    if (error || !row) {
+      console.error('[databaseService] createNotification error:', error?.message);
+      return { success: false, error: error?.message || 'Failed to create notification' };
+    }
+
+    return { success: true, notification: mapNotificationRow(row) };
+  } catch (err: any) {
+    console.error('[databaseService] createNotification unexpected error:', err);
+    return { success: false, error: err?.message || 'Failed to create notification' };
+  }
+}
+
+export async function getUserNotifications(
+  userId: string,
+  limit: number = 50
+): Promise<AppNotification[]> {
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error || !data) {
+      console.warn('[databaseService] getUserNotifications error:', error?.message);
+      return [];
+    }
+
+    return data.map(mapNotificationRow);
+  } catch (err) {
+    console.error('[databaseService] getUserNotifications unexpected error:', err);
+    return [];
+  }
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  try {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (error) {
+      console.warn('[databaseService] getUnreadNotificationCount error:', error.message);
+      return 0;
+    }
+
+    return count || 0;
+  } catch (err) {
+    console.error('[databaseService] getUnreadNotificationCount unexpected error:', err);
+    return 0;
+  }
+}
+
+export async function markNotificationAsRead(
+  notificationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('[databaseService] markNotificationAsRead error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to mark notification as read' };
+  }
+}
+
+export async function markAllNotificationsAsRead(
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (error) {
+      console.error('[databaseService] markAllNotificationsAsRead error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to mark all as read' };
+  }
+}
+
+export async function deleteNotification(
+  notificationId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId);
+
+    if (error) {
+      console.error('[databaseService] deleteNotification error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to delete notification' };
+  }
+}
+
+export function subscribeToNotifications(
+  userId: string,
+  callback: (notification: AppNotification) => void
+): () => void {
+  const channel = supabase
+    .channel(`notifications:${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        if (payload.new) {
+          callback(mapNotificationRow(payload.new));
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export async function getNotificationPreferences(
+  userId: string
+): Promise<NotificationPreferences> {
+  try {
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[databaseService] getNotificationPreferences error:', error.message);
+    }
+
+    if (!data) {
+      const defaultPrefs = {
+        user_id: userId,
+        push_enabled: true,
+        matches_enabled: true,
+        messages_enabled: true,
+        likes_enabled: true,
+        updated_at: new Date().toISOString(),
+      };
+      await supabase
+        .from('notification_preferences')
+        .upsert(defaultPrefs, { onConflict: 'user_id' });
+      return mapPreferencesRow(defaultPrefs, userId);
+    }
+
+    return mapPreferencesRow(data, userId);
+  } catch (err) {
+    console.error('[databaseService] getNotificationPreferences unexpected error:', err);
+    return mapPreferencesRow(null, userId);
+  }
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  prefs: Partial<Omit<NotificationPreferences, 'userId' | 'updatedAt'>>
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const payload: Record<string, any> = {
+      user_id: userId,
+      updated_at: new Date().toISOString(),
+    };
+    if (prefs.pushEnabled !== undefined) payload.push_enabled = prefs.pushEnabled;
+    if (prefs.matchesEnabled !== undefined) payload.matches_enabled = prefs.matchesEnabled;
+    if (prefs.messagesEnabled !== undefined) payload.messages_enabled = prefs.messagesEnabled;
+    if (prefs.likesEnabled !== undefined) payload.likes_enabled = prefs.likesEnabled;
+
+    const { error } = await supabase
+      .from('notification_preferences')
+      .upsert(payload, { onConflict: 'user_id' });
+
+    if (error) {
+      console.error('[databaseService] updateNotificationPreferences error:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to update preferences' };
+  }
+}
+
+export async function notifyMatchCreated(
+  matchId: string,
+  userAId: string,
+  userBId: string,
+  userAName: string,
+  userBName: string
+): Promise<void> {
+  try {
+    // 1. In-app notifications for both users
+    await Promise.allSettled([
+      createNotification(
+        userAId,
+        'match',
+        "It's a Match! 🎉",
+        `You and ${userBName} liked each other. Say hello!`,
+        { matchId, type: 'match', screen: '/chat' }
+      ),
+      createNotification(
+        userBId,
+        'match',
+        "It's a Match! 🎉",
+        `You and ${userAName} liked each other. Say hello!`,
+        { matchId, type: 'match', screen: '/chat' }
+      ),
+    ]);
+
+    // 2. Push notifications (respecting preferences)
+    const [prefsA, prefsB] = await Promise.all([
+      getNotificationPreferences(userAId),
+      getNotificationPreferences(userBId),
+    ]);
+
+    if (prefsA.pushEnabled && prefsA.matchesEnabled) {
+      await sendPushNotification(
+        userAId,
+        "It's a Match! 🎉",
+        `You and ${userBName} liked each other. Say hello!`,
+        { matchId, type: 'match', screen: '/chat' }
+      );
+    }
+
+    if (prefsB.pushEnabled && prefsB.matchesEnabled) {
+      await sendPushNotification(
+        userBId,
+        "It's a Match! 🎉",
+        `You and ${userAName} liked each other. Say hello!`,
+        { matchId, type: 'match', screen: '/chat' }
+      );
+    }
+  } catch (err) {
+    console.error('[databaseService] notifyMatchCreated error:', err);
+  }
+}
+
+export async function notifyNewMessage(
+  matchId: string,
+  recipientId: string,
+  senderName: string,
+  messagePreview: string
+): Promise<void> {
+  try {
+    const preview =
+      messagePreview.length > 100
+        ? `${messagePreview.slice(0, 97)}...`
+        : messagePreview;
+
+    // 1. In-app notification for recipient
+    await createNotification(
+      recipientId,
+      'message',
+      `New message from ${senderName}`,
+      preview,
+      { matchId, type: 'message', screen: '/chat' }
+    );
+
+    // 2. Push notification (respecting preferences)
+    const prefs = await getNotificationPreferences(recipientId);
+    if (prefs.pushEnabled && prefs.messagesEnabled) {
+      await sendPushNotification(
+        recipientId,
+        `New message from ${senderName}`,
+        preview,
+        { matchId, type: 'message', screen: '/chat' }
+      );
+    }
+  } catch (err) {
+    console.error('[databaseService] notifyNewMessage error:', err);
+  }
+}
+
 

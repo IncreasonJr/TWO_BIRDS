@@ -3,7 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { useMatches } from '../hooks/useMatches';
-import { getBlockedUserIds } from '../lib/databaseService';
+import {
+  getBlockedUserIds,
+  getNotificationPreferences,
+  updateNotificationPreferences
+} from '../lib/databaseService';
+import {
+  getPermissionStatus,
+  requestPushPermission,
+  optInToPush,
+  optOutOfPush
+} from '../lib/oneSignalClient';
 import {
   Camera,
   Edit3,
@@ -14,6 +24,7 @@ import {
   CheckCircle2,
   Shield,
   Bell,
+  MessageCircle,
   LogOut,
   Sparkles,
   ChevronRight,
@@ -80,6 +91,21 @@ export const Profile: React.FC = () => {
   const [photoToDelete, setPhotoToDelete] = useState<string | null>(null);
   const [blockedCount, setBlockedCount] = useState<number>(0);
 
+  // Notification Preferences State
+  const [notificationPrefs, setNotificationPrefs] = useState<{
+    pushEnabled: boolean;
+    matchesEnabled: boolean;
+    messagesEnabled: boolean;
+    likesEnabled: boolean;
+  }>({
+    pushEnabled: true,
+    matchesEnabled: true,
+    messagesEnabled: true,
+    likesEnabled: true,
+  });
+  const [pushPermissionStatus, setPushPermissionStatus] = useState<'granted' | 'denied' | 'default'>(() => getPermissionStatus());
+  const [isUpdatingPrefs, setIsUpdatingPrefs] = useState<boolean>(false);
+
   useEffect(() => {
     if (currentUser?.id) {
       getBlockedUserIds(currentUser.id).then((ids) => {
@@ -87,8 +113,55 @@ export const Profile: React.FC = () => {
       }).catch((err) => {
         console.warn('Failed to load blocked user count:', err);
       });
+
+      getNotificationPreferences(currentUser.id).then((prefs) => {
+        setNotificationPrefs({
+          pushEnabled: prefs.pushEnabled,
+          matchesEnabled: prefs.matchesEnabled,
+          messagesEnabled: prefs.messagesEnabled,
+          likesEnabled: prefs.likesEnabled,
+        });
+      }).catch((err) => {
+        console.warn('Failed to load notification preferences:', err);
+      });
     }
   }, [currentUser?.id]);
+
+  const handleTogglePreference = async (key: 'pushEnabled' | 'matchesEnabled' | 'messagesEnabled' | 'likesEnabled') => {
+    if (!currentUser?.id || isUpdatingPrefs) return;
+
+    const nextVal = !notificationPrefs[key];
+    const updated = { ...notificationPrefs, [key]: nextVal };
+
+    if (key === 'pushEnabled' && nextVal) {
+      if (pushPermissionStatus !== 'granted') {
+        const granted = await requestPushPermission();
+        const currentPerm = getPermissionStatus();
+        setPushPermissionStatus(currentPerm);
+        if (!granted && currentPerm === 'denied') {
+          setToastMessage('Push notifications blocked in browser settings');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+          return;
+        }
+      }
+      await optInToPush();
+    } else if (key === 'pushEnabled' && !nextVal) {
+      await optOutOfPush();
+    }
+
+    setNotificationPrefs(updated);
+    setIsUpdatingPrefs(true);
+    const res = await updateNotificationPreferences(currentUser.id, updated);
+    setIsUpdatingPrefs(false);
+    if (res.success) {
+      setToastMessage('Notification settings updated');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
+    } else {
+      setNotificationPrefs(notificationPrefs);
+    }
+  };
 
   // Form State
   const [formName, setFormName] = useState<string>(currentUser.name);
@@ -535,9 +608,9 @@ export const Profile: React.FC = () => {
             <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
           </button>
 
-          {/* Notifications */}
+          {/* Notification Center */}
           <button
-            onClick={() => setActivePlaceholderModal('Notifications')}
+            onClick={() => navigate('/notifications')}
             className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-[#4A4A4A]/30 transition text-left"
           >
             <div className="flex items-center gap-3">
@@ -545,8 +618,8 @@ export const Profile: React.FC = () => {
                 <Bell className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-xs font-extrabold text-[#FFFFFF]">Notifications</p>
-                <p className="text-[10px] text-[#A0A0A0] font-medium">Push alerts for new matches & chats</p>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Notification Center</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">View all campus alerts & activity</p>
               </div>
             </div>
             <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
@@ -622,6 +695,150 @@ export const Profile: React.FC = () => {
             </div>
             <ChevronRight className="w-4 h-4 text-[#A0A0A0]" />
           </button>
+        </div>
+      </div>
+
+      {/* Notifications Preferences Section */}
+      <div className="space-y-2 shrink-0">
+        <h3 className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider px-1">Notifications</h3>
+
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl overflow-hidden divide-y divide-[#4A4A4A] shadow-md">
+          {/* Push Notifications Toggle */}
+          <div className="px-4 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-extrabold text-[#FFFFFF]">Push Notifications</p>
+                  <span
+                    className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                      pushPermissionStatus === 'granted'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : pushPermissionStatus === 'denied'
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-[#C9A84C]/20 text-[#C9A84C] border border-[#C9A84C]/30'
+                    }`}
+                  >
+                    {pushPermissionStatus === 'granted'
+                      ? 'Enabled'
+                      : pushPermissionStatus === 'denied'
+                      ? 'Blocked'
+                      : 'Permission Needed'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">
+                  Receive device alerts even when the app is closed
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleTogglePreference('pushEnabled')}
+              role="switch"
+              aria-checked={notificationPrefs.pushEnabled}
+              disabled={isUpdatingPrefs}
+              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 shrink-0 ${
+                notificationPrefs.pushEnabled ? 'bg-[#C9A84C]' : 'bg-[#1A1A1A] border border-[#4A4A4A]'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                  notificationPrefs.pushEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* New Matches Toggle */}
+          <div className="px-4 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-pink-400">
+                <Heart className="w-4 h-4 fill-pink-500/20" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">New Matches</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">
+                  Alert me immediately when someone likes me back
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleTogglePreference('matchesEnabled')}
+              role="switch"
+              aria-checked={notificationPrefs.matchesEnabled}
+              disabled={isUpdatingPrefs}
+              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 shrink-0 ${
+                notificationPrefs.matchesEnabled ? 'bg-[#C9A84C]' : 'bg-[#1A1A1A] border border-[#4A4A4A]'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                  notificationPrefs.matchesEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* New Messages Toggle */}
+          <div className="px-4 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-[#C9A84C]">
+                <MessageCircle className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">New Messages</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">
+                  Alert me when a match sends a campus chat message
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleTogglePreference('messagesEnabled')}
+              role="switch"
+              aria-checked={notificationPrefs.messagesEnabled}
+              disabled={isUpdatingPrefs}
+              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 shrink-0 ${
+                notificationPrefs.messagesEnabled ? 'bg-[#C9A84C]' : 'bg-[#1A1A1A] border border-[#4A4A4A]'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                  notificationPrefs.messagesEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Likes Toggle */}
+          <div className="px-4 py-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#1A1A1A] text-amber-400">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-xs font-extrabold text-[#FFFFFF]">Likes</p>
+                <p className="text-[10px] text-[#A0A0A0] font-medium">
+                  Alert me when someone expresses interest in my profile
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => handleTogglePreference('likesEnabled')}
+              role="switch"
+              aria-checked={notificationPrefs.likesEnabled}
+              disabled={isUpdatingPrefs}
+              className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-0.5 shrink-0 ${
+                notificationPrefs.likesEnabled ? 'bg-[#C9A84C]' : 'bg-[#1A1A1A] border border-[#4A4A4A]'
+              }`}
+            >
+              <span
+                className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                  notificationPrefs.likesEnabled ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
