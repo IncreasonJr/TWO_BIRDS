@@ -18,6 +18,20 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
     
+    <!-- OneSignal Web Push SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "4e342640-422d-4582-aa32-434b8c236e5b",
+          serviceWorkerPath: "/push/onesignal/OneSignalSDKWorker.js",
+          serviceWorkerParam: { scope: "/push/onesignal/" },
+          allowLocalhostAsSecureOrigin: true,
+        });
+      });
+    </script>
+
     <title>Two Birds</title>
   </head>
   <body class="h-full antialiased font-sans selection:bg-[#C9A84C] selection:text-[#1A1A1A] bg-[#1A1A1A] text-[#FFFFFF] overflow-x-hidden">
