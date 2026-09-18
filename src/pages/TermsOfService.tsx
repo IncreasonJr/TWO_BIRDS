@@ -43,7 +43,7 @@ export const TermsOfService: React.FC = () => {
             Terms of Service
           </h1>
           <p className="text-xs text-[#A0A0A0] font-medium">
-            Last updated: September 14, 2026
+            Last updated: September 18, 2026
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export const TermsOfService: React.FC = () => {
             <span>1. Acceptance of Terms</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            By creating an account, downloading, or using Two Birds ("the App"), you agree to be bound by these Terms of Service ("Terms") and our Privacy Policy. If you do not agree with any part of these Terms, you must not access or use the App.
+            By creating an account or accessing the Two Birds campus dating application ("the App"), you agree to be bound by these Terms of Service ("Terms") and our Privacy Policy. If you do not agree to all terms, you must not use or access the App.
           </p>
         </div>
 
@@ -63,44 +63,47 @@ export const TermsOfService: React.FC = () => {
             <span>2. Eligibility & Student Verification</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You must be at least <strong className="text-[#FFFFFF]">18 years old</strong> and register with a valid, official university email address ending in <strong className="text-[#C9A84C]">.edu</strong>. Two Birds is exclusively for verified university students. Accounts created without an active, verified .edu email address or found to belong to non-students will be permanently removed.
+            To use Two Birds, you must be at least <strong className="text-[#FFFFFF]">18 years of age</strong> and hold a valid, active university email address ending in <strong className="text-[#C9A84C]">.edu</strong>. Two Birds is exclusively for verified college students. Any account registered without verified student credentials or operated by non-students will be banned immediately.
           </p>
         </div>
 
         {/* 3. User Accounts */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>3. User Accounts & Verification</span>
+            <span>3. User Accounts</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account. You agree to provide accurate, current, and complete registration information. You are required to maintain a valid, active .edu university email address associated with your account at all times.
+            You are responsible for safeguarding your login credentials and for all interactions that take place under your account. You agree to provide accurate, honest profile information and to keep your university email address up to date. You may only create one account for your personal use.
           </p>
         </div>
 
         {/* 4. User Conduct */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2.5 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>4. User Conduct & Campus Safety</span>
+            <span>4. User Conduct & Moderation</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed font-semibold">
-            Two Birds enforces a strict zero-tolerance policy against misconduct. You agree NOT to:
+            Two Birds maintains a safe, respectful campus dating culture. You agree NOT to:
           </p>
           <ul className="space-y-1 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1">
-            <li>Harass, bully, stalk, intimidate, or discriminate against any student.</li>
-            <li>Create fake profiles, impersonate another individual, or submit fraudulent photos.</li>
-            <li>Send unsolicited promotional content, commercial advertisements, or spam.</li>
-            <li>Upload sexually explicit, defamatory, violent, or non-consensual media.</li>
-            <li>Attempt to reverse-engineer, crawl, or scrape the application or other users' profiles.</li>
+            <li>Harass, stalk, intimidate, bully, or discriminate against any student.</li>
+            <li>Create fake profiles, impersonate classmates, or use misleading or stolen photos.</li>
+            <li>Send unsolicited sexually explicit, defamatory, violent, or non-consensual content.</li>
+            <li>Promote commercial solicitation, spam, scams, or external marketing links.</li>
+            <li>Attempt to crawl, scrape, reverse-engineer, or compromise the platform.</li>
           </ul>
+          <p className="text-xs text-[#FFFFFF]/80 leading-relaxed pt-1">
+            Users can <strong className="text-[#C9A84C]">report</strong> or <strong className="text-[#C9A84C]">block</strong> any account at any time. Violations of conduct standards will result in immediate suspension.
+          </p>
         </div>
 
         {/* 5. Content Ownership */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>5. Content Ownership & License</span>
+            <span>5. Content Ownership</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You retain all ownership rights to the photos, bios, and messages you submit. However, by uploading content, you grant Two Birds a limited, non-exclusive, royalty-free license to store, host, display, and transmit your content solely for the purpose of operating and improving the service.
+            You retain ownership of all photos, bios, messages, and voice notes you upload. By submitting content to Two Birds, you grant us a worldwide, non-exclusive, royalty-free license to host, display, and transmit your content solely for the purpose of operating the matching and messaging service.
           </p>
         </div>
 
@@ -110,7 +113,7 @@ export const TermsOfService: React.FC = () => {
             <span>6. Termination</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            We reserve the right to suspend or permanently ban your account at our sole discretion, without notice, if you violate these Terms or community guidelines. You may also terminate your account at any time via the Profile settings.
+            We reserve the right to suspend or terminate your account without prior notice for violations of these Terms or community guidelines. You may terminate your account at any time via the "Delete Account" button in your profile settings, which permanently wipes all your records.
           </p>
         </div>
 
@@ -120,7 +123,7 @@ export const TermsOfService: React.FC = () => {
             <span>7. Disclaimers</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            The App is provided on an "AS IS" and "AS AVAILABLE" basis without warranties of any kind. Two Birds does not conduct criminal background checks or verify the offline actions of users. Always exercise caution and common sense when meeting someone in person.
+            Two Birds is provided on an "AS IS" and "AS AVAILABLE" basis. While we verify student .edu email addresses, Two Birds does not conduct criminal background checks or screen user conduct outside the App. You are solely responsible for your interactions and should always practice campus safety precautions when meeting connections in person.
           </p>
         </div>
 
@@ -130,7 +133,7 @@ export const TermsOfService: React.FC = () => {
             <span>8. Limitation of Liability</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            To the maximum extent permitted by applicable law, Two Birds and its affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your access to or use of the application.
+            To the maximum extent permitted by applicable law, Two Birds and its operators shall not be liable for any indirect, incidental, special, or consequential damages resulting from your use of or inability to use the service.
           </p>
         </div>
 
@@ -140,27 +143,27 @@ export const TermsOfService: React.FC = () => {
             <span>9. Changes to Terms</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            We may revise these Terms from time to time. The most current version will always be posted within the App. Your continued use of the App following any changes constitutes your acceptance of the updated Terms.
+            We reserve the right to modify these Terms at any time. Material modifications will be posted in the App or communicated via email. Continued use of the App following updates constitutes your acceptance of the revised Terms.
           </p>
         </div>
 
-        {/* 10. Contact Us */}
+        {/* 10. Contact */}
         <div className="bg-[#333333] border border-[#C9A84C]/40 rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
             <Mail className="w-4 h-4 text-[#C9A84C]" />
-            <span>10. Contact Us</span>
+            <span>10. Contact</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            If you have questions regarding these Terms of Service or community violations, please contact:
+            If you have questions regarding these Terms of Service or wish to report a violation, please contact us at:
           </p>
           <div className="pt-1 text-xs">
             <a
-              href="mailto:legal@twobirds.app"
+              href="mailto:support@twobirds.app"
               className="font-bold text-[#C9A84C] hover:underline flex items-center gap-1.5"
             >
-              <span>legal@twobirds.app</span>
+              <span>support@twobirds.app</span>
             </a>
-            <p className="text-[11px] text-[#A0A0A0] mt-0.5">Two Birds Legal & Campus Relations</p>
+            <p className="text-[11px] text-[#A0A0A0] mt-0.5">Two Birds Campus Relations & Safety Team</p>
           </div>
         </div>
 
@@ -170,7 +173,7 @@ export const TermsOfService: React.FC = () => {
             onClick={() => navigate(-1)}
             className="px-6 py-2.5 rounded-full bg-[#333333] hover:bg-[#4A4A4A] border border-[#4A4A4A] text-xs font-bold text-[#FFFFFF] transition active:scale-95"
           >
-            Back to Profile
+            Back
           </button>
         </div>
       </div>
@@ -179,4 +182,3 @@ export const TermsOfService: React.FC = () => {
 };
 
 export default TermsOfService;
-

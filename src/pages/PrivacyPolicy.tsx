@@ -43,7 +43,7 @@ export const PrivacyPolicy: React.FC = () => {
             Privacy Policy
           </h1>
           <p className="text-xs text-[#A0A0A0] font-medium">
-            Last updated: September 14, 2026
+            Last updated: September 18, 2026
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export const PrivacyPolicy: React.FC = () => {
             <span>1. Introduction</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed font-normal">
-            Welcome to Two Birds ("we", "our", or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and safeguard your data when you use our campus dating and connections mobile application.
+            Welcome to Two Birds ("we", "our", or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, and safeguard your data when you use our campus dating and connections application.
           </p>
         </div>
 
@@ -63,13 +63,13 @@ export const PrivacyPolicy: React.FC = () => {
             <span>2. Information We Collect</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            To provide genuine, verified university connections, we collect the following categories of information:
+            To provide genuine, verified college dating connections, we collect the following categories of information:
           </p>
           <ul className="space-y-1.5 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1 font-normal">
-            <li><strong className="text-[#FFFFFF]">University (.edu) Email & Verification:</strong> We collect your official .edu university email address strictly for student verification to confirm active university enrollment. Your .edu email confirms your student status, is never shared with or displayed to other users on the platform, and is never sold to third parties or advertisers.</li>
-            <li><strong className="text-[#FFFFFF]">Profile Information:</strong> Full name, university name, age, gender identity, major/academic focus, bio, and student interests.</li>
-            <li><strong className="text-[#FFFFFF]">Photos & Media:</strong> Images and audio voice notes you choose to upload to your profile or share in direct match chats.</li>
-            <li><strong className="text-[#FFFFFF]">Usage & Activity:</strong> Swipe decisions (likes, passes), matches formed, messaging timestamps, and app interaction data.</li>
+            <li><strong className="text-[#FFFFFF]">University (.edu) Email & Verification:</strong> Your official university email address ending in .edu, collected strictly to verify active university enrollment and campus safety. Your .edu email address is never shared with or displayed to other students and is never sold.</li>
+            <li><strong className="text-[#FFFFFF]">Profile Information:</strong> Your name, age (18+), university name, academic major, graduation year, bio, and personal interests.</li>
+            <li><strong className="text-[#FFFFFF]">Photos & Media:</strong> Images you choose to upload to your profile or audio voice notes you share in direct match chats.</li>
+            <li><strong className="text-[#FFFFFF]">App Activity & Swipes:</strong> Swipe decisions (likes, passes), mutual matches, conversation messages, timestamps, and interaction history.</li>
           </ul>
         </div>
 
@@ -79,88 +79,98 @@ export const PrivacyPolicy: React.FC = () => {
             <span>3. How We Use Your Information</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            We use collected data solely to:
+            We use your collected information strictly for:
           </p>
           <ul className="space-y-1 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1">
-            <li>Verify university enrollment and protect campus safety.</li>
-            <li>Match you with compatible verified students.</li>
-            <li>Facilitate real-time messaging, icebreakers, and voice notes.</li>
-            <li>Maintain app security, prevent bot networks, and resolve technical issues.</li>
+            <li><strong className="text-[#FFFFFF]">Matching:</strong> Calculating compatibility and presenting student profile cards on the campus discovery feed.</li>
+            <li><strong className="text-[#FFFFFF]">Messaging:</strong> Facilitating private real-time text and voice chat between mutual matches.</li>
+            <li><strong className="text-[#FFFFFF]">Push Notifications:</strong> Delivering notifications (via OneSignal) for new matches, incoming messages, and account updates.</li>
+            <li><strong className="text-[#FFFFFF]">Authentication & Security:</strong> Managing secure authentication and database persistence via Supabase, and enforcing campus safety policies.</li>
           </ul>
         </div>
 
-        {/* 4. Sharing Your Information */}
+        {/* 4. Data Sharing */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>4. Sharing Your Information</span>
+            <span>4. Data Sharing</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed font-semibold text-[#C9A84C]">
-            We never sell, rent, or monetize your personal data or photos to third parties or advertisers.
+            We NEVER sell, rent, trade, or monetize your personal data, photos, or emails to third parties or advertisers.
           </p>
           <p className="text-xs text-[#FFFFFF]/80 leading-relaxed">
-            Your information is only shared in these limited scenarios:
+            Your data is only shared in these limited situations:
           </p>
           <ul className="space-y-1 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1">
-            <li><strong className="text-[#FFFFFF]">Other Students:</strong> Information included on your public dating card is visible to other verified students.</li>
-            <li><strong className="text-[#FFFFFF]">Service Providers:</strong> Trusted cloud hosting and database vendors bound by strict data protection agreements.</li>
-            <li><strong className="text-[#FFFFFF]">Legal Compliance:</strong> When required by law or to protect user safety and prevent harm.</li>
+            <li><strong className="text-[#FFFFFF]">Other Students:</strong> Profile details (photos, name, age, major, bio, interests) are shown to other verified students as required for dating and matching.</li>
+            <li><strong className="text-[#FFFFFF]">Infrastructure Providers:</strong> Secure hosting, database, and push notification services (Supabase, OneSignal, Vercel) operating under strict data processing standards.</li>
+            <li><strong className="text-[#FFFFFF]">Legal Compliance:</strong> When required by lawful court order or to protect user safety and campus security.</li>
           </ul>
         </div>
 
-        {/* 5. Your Rights */}
+        {/* 5. Data Retention */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>5. Your Rights & Choices</span>
+            <span>5. Data Retention</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You maintain full control over your personal data:
+            We retain your information only as long as your account remains active. You can permanently delete your account at any time via the Profile settings ("Delete Account"). When you delete your account, your profile, photos, matches, and chat history are permanently erased from our databases and storage.
+          </p>
+        </div>
+
+        {/* 6. Your Rights */}
+        <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
+          <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
+            <span>6. Your Rights</span>
+          </h2>
+          <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
+            You maintain full ownership and control over your personal data:
           </p>
           <ul className="space-y-1 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1">
-            <li><strong className="text-[#FFFFFF]">Access & Export:</strong> Request a copy of your personal data at any time.</li>
-            <li><strong className="text-[#FFFFFF]">Correction:</strong> Edit your photos, bio, interests, and details directly in the Profile tab.</li>
-            <li><strong className="text-[#FFFFFF]">Account Deletion:</strong> Delete your profile, matches, and chat history permanently from the app settings.</li>
-            <li><strong className="text-[#FFFFFF]">Incognito Mode:</strong> Pause discovery to hide your profile from new students without deleting existing matches.</li>
+            <li><strong className="text-[#FFFFFF]">Access:</strong> View and export your personal information directly within the app.</li>
+            <li><strong className="text-[#FFFFFF]">Correction:</strong> Update your profile photos, bio, interests, and details at any time.</li>
+            <li><strong className="text-[#FFFFFF]">Deletion:</strong> Completely and irreversibly delete your account and all associated records.</li>
+            <li><strong className="text-[#FFFFFF]">Blocking & Moderation:</strong> Block or report any user to prevent interaction and remove all mutual communication history.</li>
           </ul>
         </div>
 
-        {/* 6. Data Security */}
+        {/* 7. Security */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>6. Data Security</span>
+            <span>7. Security</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            We employ modern encryption protocols (TLS/HTTPS in transit and AES-256 at rest) to protect your student credentials, messages, and photos. While no digital system is 100% infallible, we regularly audit our infrastructure to safeguard your information.
+            We employ modern encryption protocols (TLS/HTTPS in transit and AES-256 at rest) to protect your student credentials, messages, and photos. We enforce Row-Level Security (RLS) on our databases to guarantee that only authorized users can access their data.
           </p>
         </div>
 
-        {/* 7. Children's Privacy */}
+        {/* 8. Children (18+ Only) */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>7. Children's Privacy (18+ Only)</span>
+            <span>8. Children (18+ Only)</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            Two Birds is strictly intended for individuals who are at least <strong className="text-[#FFFFFF]">18 years of age</strong> and enrolled in an accredited higher education institution. We do not knowingly collect personal information from individuals under 18. Any account found to belong to a minor will be terminated immediately.
+            Two Birds is strictly intended for individuals who are at least <strong className="text-[#FFFFFF]">18 years of age</strong> and enrolled in an accredited college or university. We do not knowingly collect personal data from minors. Any account found to belong to an individual under 18 will be terminated immediately.
           </p>
         </div>
 
-        {/* 8. Changes to This Policy */}
+        {/* 9. Changes to This Policy */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>8. Changes to This Policy</span>
+            <span>9. Changes to This Policy</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            We may update this Privacy Policy from time to time to reflect improvements or regulatory changes. We will notify you of any material changes via in-app banner or email notice prior to the changes taking effect.
+            We may update this Privacy Policy from time to time. Any material changes will be announced within the app or via email notification prior to taking effect.
           </p>
         </div>
 
-        {/* 9. Contact Us */}
+        {/* 10. Contact Us */}
         <div className="bg-[#333333] border border-[#C9A84C]/40 rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
             <Mail className="w-4 h-4 text-[#C9A84C]" />
-            <span>9. Contact Us</span>
+            <span>10. Contact Us</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            If you have questions, privacy inquiries, or wish to exercise your data rights, please contact our Campus Data Protection team at:
+            If you have questions, privacy inquiries, or wish to exercise your data rights, please contact our team at:
           </p>
           <div className="pt-1 text-xs">
             <a
@@ -179,7 +189,7 @@ export const PrivacyPolicy: React.FC = () => {
             onClick={() => navigate(-1)}
             className="px-6 py-2.5 rounded-full bg-[#333333] hover:bg-[#4A4A4A] border border-[#4A4A4A] text-xs font-bold text-[#FFFFFF] transition active:scale-95"
           >
-            Back to Profile
+            Back
           </button>
         </div>
       </div>
@@ -188,4 +198,3 @@ export const PrivacyPolicy: React.FC = () => {
 };
 
 export default PrivacyPolicy;
-
