@@ -51,8 +51,18 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
+      if (name.trim().length > 60) {
+        setErrorMessage('Name cannot exceed 60 characters');
+        return;
+      }
+
       if (!university.trim()) {
         setErrorMessage('Please enter your university name');
+        return;
+      }
+
+      if (university.trim().length > 100) {
+        setErrorMessage('University name cannot exceed 100 characters');
         return;
       }
 
@@ -61,8 +71,28 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
+      if (major.trim().length > 80) {
+        setErrorMessage('Major cannot exceed 80 characters');
+        return;
+      }
+
+      if (!age || Number(age) < 18) {
+        setErrorMessage('You must be at least 18 years of age to join Two Birds.');
+        return;
+      }
+
+      if (Number(age) > 99) {
+        setErrorMessage('Please enter a valid age under 100.');
+        return;
+      }
+
       if (!password || password.length < 6) {
         setErrorMessage('Password must be at least 6 characters long');
+        return;
+      }
+
+      if (password.length > 72) {
+        setErrorMessage('Password cannot exceed 72 characters');
         return;
       }
 

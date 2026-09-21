@@ -58,7 +58,10 @@ export async function getAllProfilesExcept(
 ): Promise<UserProfile[]> {
   try {
     const blockedIds = await getAllBlockedRelationIds(userId);
-    const excludedIds = Array.from(new Set([...swipedIds, ...blockedIds]));
+    const rawExcludedIds = Array.from(new Set([...swipedIds, ...blockedIds]));
+    // Strictly validate UUIDs to guarantee filter safety
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const excludedIds = rawExcludedIds.filter((id) => typeof id === 'string' && uuidRegex.test(id));
 
     let query = supabase
       .from('profiles')

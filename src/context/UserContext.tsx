@@ -373,6 +373,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
+    if (!data.age || data.age < 18) {
+      return {
+        success: false,
+        error: 'You must be at least 18 years of age to sign up for Two Birds.',
+      };
+    }
+
     if (!password || password.length < 6) {
       return {
         success: false,
