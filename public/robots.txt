@@ -1,0 +1,21 @@
+# Robots.txt for Two Birds
+User-agent: *
+Allow: /
+Allow: /signup
+Allow: /login
+Allow: /privacy
+Allow: /terms
+Allow: /community-guidelines
+
+# Disallow private user-authenticated application routes
+Disallow: /chat
+Disallow: /matches
+Disallow: /profile
+Disallow: /notifications
+Disallow: /add-photos
+Disallow: /blocked-users
+Disallow: /delete-account
+Disallow: /verify-email
+Disallow: /forgot-password
+
+Sitemap: https://two-birds-nine.vercel.app/sitemap.xml
