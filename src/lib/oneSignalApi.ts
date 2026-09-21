@@ -1,4 +1,5 @@
-// OneSignal REST API Helper Module
+// OneSignal REST API Helper Module (Secure Backend Edge Function Integration)
+import { supabase } from './supabaseClient';
 
 interface SendPushNotificationResult {
   success: boolean;
@@ -8,10 +9,11 @@ interface SendPushNotificationResult {
 
 /**
  * Dispatches a push notification to a specific recipient by their external user ID
- * (e.g. Supabase user UUID).
+ * (e.g. Supabase user UUID) via the secure Supabase Edge Function `send-push`.
  * 
- * Note: Client-side helper for development & direct push dispatch.
- * In a future phase, this should be moved to a secure Supabase Edge Function.
+ * Security Note:
+ * The OneSignal REST API Key is an administrative secret stored exclusively in Supabase Secrets.
+ * It is NEVER exposed to or bundled in the client application.
  */
 export async function sendPushNotification(
   recipientUserId: string,
@@ -19,25 +21,6 @@ export async function sendPushNotification(
   body: string,
   data?: Record<string, any>
 ): Promise<SendPushNotificationResult> {
-  const appId =
-    import.meta.env.VITE_ONESIGNAL_APP_ID || '4e342640-422d-4582-aa32-434b8c236e5b';
-  const restApiKey = import.meta.env.VITE_ONESIGNAL_REST_API_KEY;
-
-  if (
-    !restApiKey ||
-    restApiKey.includes('PASTE YOUR') ||
-    restApiKey.includes('YOUR_REST_API_KEY_HERE') ||
-    restApiKey.includes('your-rest-api-key-here')
-  ) {
-    console.warn(
-      '[OneSignal API] Missing or placeholder VITE_ONESIGNAL_REST_API_KEY. Skipping push notification.'
-    );
-    return {
-      success: false,
-      error: 'OneSignal REST API key is not configured in environment variables.',
-    };
-  }
-
   if (!recipientUserId) {
     return {
       success: false,
@@ -45,49 +28,32 @@ export async function sendPushNotification(
     };
   }
 
-  const payload = {
-    app_id: appId,
-    target_channel: 'push',
-    include_aliases: {
-      external_id: [recipientUserId],
-    },
-    headings: {
-      en: title,
-    },
-    contents: {
-      en: body,
-    },
-    data: data || {},
-  };
-
   try {
-    const response = await fetch('https://api.onesignal.com/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Key ${restApiKey.trim()}`,
+    const { data: edgeData, error: edgeError } = await supabase.functions.invoke('send-push', {
+      body: {
+        recipientUserId,
+        title,
+        body,
+        data: data || {},
       },
-      body: JSON.stringify(payload),
     });
 
-    const resultData = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      console.warn('[OneSignal API] Push notification delivery error:', resultData);
+    if (edgeError) {
+      // Graceful fallback: Edge function not deployed yet or returning error.
+      // In-app notifications in Supabase database already work seamlessly.
+      console.warn('[OneSignal API] Push dispatch notice:', edgeError.message);
       return {
         success: false,
-        error: resultData?.errors?.[0] || resultData?.error || `HTTP Error ${response.status}`,
-        data: resultData,
+        error: edgeError.message,
       };
     }
 
-    console.log('[OneSignal API] Push notification sent successfully to:', recipientUserId, resultData);
     return {
       success: true,
-      data: resultData,
+      data: edgeData,
     };
   } catch (err: any) {
-    console.error('[OneSignal API] Unexpected fetch error while sending push notification:', err);
+    console.warn('[OneSignal API] Unexpected error invoking push dispatch function:', err);
     return {
       success: false,
       error: err?.message || 'Failed to dispatch push notification',
