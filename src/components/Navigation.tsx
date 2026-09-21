@@ -95,6 +95,7 @@ export const TopNavbar: React.FC = () => {
           onClick={promptInstall}
           className="flex items-center gap-1.5 bg-[#C9A84C] text-[#1A1A1A] hover:bg-[#D4B55B] active:scale-95 text-xs font-bold px-3 py-1.5 rounded-full shadow-glow-gold transition-all duration-200"
           title="Install Two Birds PWA"
+          aria-label="Install Two Birds PWA"
         >
           <Download size={13} strokeWidth={2.5} />
           <span>Install</span>

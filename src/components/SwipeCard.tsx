@@ -75,7 +75,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
         {firstPhoto ? (
           <img
             src={firstPhoto}
-            alt={profile.name}
+            alt={`${profile.name}'s photo preview`}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover filter brightness-90"
           />
         ) : (
@@ -105,7 +107,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
           {currentPhoto ? (
             <img
               src={currentPhoto}
-              alt={profile.name}
+              alt={`${profile.name}'s profile photo`}
+              decoding="async"
               className="w-full h-full object-cover pointer-events-none"
             />
           ) : (
@@ -301,7 +304,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
                 {currentPhoto ? (
                   <img
                     src={currentPhoto}
-                    alt={profile.name}
+                    alt={`${profile.name}'s detailed profile photo`}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -317,6 +322,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
                       <button
                         key={i}
                         onClick={() => setPhotoIndex(i)}
+                        aria-label={`View photo ${i + 1} of ${photos.length}`}
                         className={`h-1.5 rounded-full transition-all ${
                           i === photoIndex ? 'w-6 bg-[#C9A84C]' : 'w-2 bg-[#FFFFFF]/50'
                         }`}
