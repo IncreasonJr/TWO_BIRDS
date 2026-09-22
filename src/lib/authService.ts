@@ -27,11 +27,11 @@ export async function signUpWithEmail(
 ): Promise<AuthResult<{ user: User | null; session: Session | null }>> {
   const trimmedEmail = email.trim();
 
-  // Enforce .edu email restriction before calling Supabase
+  // Enforce university email restriction (.edu or .edu.gh) before calling Supabase
   if (!isValidEduEmail(trimmedEmail)) {
     return {
       data: null,
-      error: new Error('Please use a valid university email (.edu) to sign up'),
+      error: new Error('Please use a valid university email ending in .edu or .edu.gh'),
     };
   }
 

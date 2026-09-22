@@ -15,7 +15,7 @@ export const VerifyEmail: React.FC = () => {
 
   const handleResend = async () => {
     if (!emailInput.trim()) {
-      setResendStatus({ success: false, message: 'Please enter your .edu email address.' });
+      setResendStatus({ success: false, message: 'Please enter your university (.edu or .edu.gh) email address.' });
       return;
     }
 
@@ -104,7 +104,7 @@ export const VerifyEmail: React.FC = () => {
               type="email"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="yourname@university.edu"
+              placeholder="yourname@stanford.edu or student@ug.edu.gh"
               className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C]"
             />
           </div>

@@ -82,7 +82,7 @@ export const ForgotPassword: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <div>
             <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
-              University Email (.edu)
+              University Email (.edu or .edu.gh)
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -90,7 +90,7 @@ export const ForgotPassword: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="yourname@stanford.edu"
+                placeholder="yourname@stanford.edu or student@ug.edu.gh"
                 className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
                 required
               />

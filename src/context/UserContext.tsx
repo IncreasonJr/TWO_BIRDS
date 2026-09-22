@@ -369,7 +369,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isValidEduEmail(trimmedEmail)) {
       return {
         success: false,
-        error: 'Please use a valid university email (.edu) to sign up',
+        error: 'Please use a valid university email ending in .edu or .edu.gh',
       };
     }
 

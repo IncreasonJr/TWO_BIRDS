@@ -40,9 +40,9 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
     setErrorMessage(null);
 
     if (mode === 'signup') {
-      // Validate .edu email
+      // Validate university email (.edu or .edu.gh)
       if (!isValidEduEmail(email)) {
-        setErrorMessage('Please use a valid university email (.edu) to sign up');
+        setErrorMessage('Please use a valid university email ending in .edu or .edu.gh');
         return;
       }
 
@@ -115,7 +115,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
       setSubmitting(false);
 
       if (!res.success) {
-        setErrorMessage(res.error || 'Please use a valid university email (.edu) to sign up');
+        setErrorMessage(res.error || 'Please use a valid university email ending in .edu or .edu.gh');
       } else if (res.needsEmailVerification) {
         navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`);
       } else {
@@ -212,7 +212,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         >
           <ShieldCheck className="w-5 h-5 text-[#C9A84C] shrink-0 mt-0.5" />
           <p className="text-xs text-[#FFFFFF] leading-relaxed font-medium">
-            Two Birds is exclusively for university students. Please use your .edu email to sign up.
+            Two Birds is exclusively for university students. Please use your .edu or .edu.gh email to sign up.
           </p>
         </motion.div>
       )}
@@ -234,7 +234,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         {/* Email Field */}
         <div>
           <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
-            {mode === 'signup' ? 'University Email (.edu) *' : 'Email Address'}
+            {mode === 'signup' ? 'University Email (.edu / .edu.gh) *' : 'Email Address'}
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -245,7 +245,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
                 setEmail(e.target.value);
                 if (errorMessage) setErrorMessage(null);
               }}
-              placeholder={mode === 'signup' ? 'yourname@stanford.edu' : 'name@university.edu'}
+              placeholder={mode === 'signup' ? 'yourname@stanford.edu or student@ug.edu.gh' : 'name@university.edu'}
               className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
               required
             />
