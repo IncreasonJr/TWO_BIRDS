@@ -36,7 +36,7 @@ export async function signUpWithEmail(
   }
 
   try {
-    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined;
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-email` : undefined;
 
     const { data, error } = await supabase.auth.signUp({
       email: trimmedEmail,
@@ -163,7 +163,7 @@ export async function sendPasswordReset(email: string): Promise<{ error: Error |
  */
 export async function resendVerificationEmail(email: string): Promise<{ error: Error | null }> {
   try {
-    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : undefined;
+    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-email` : undefined;
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: email.trim(),
