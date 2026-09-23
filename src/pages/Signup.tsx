@@ -116,10 +116,8 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
 
       if (!res.success) {
         setErrorMessage(res.error || 'Please use a valid university email ending in .edu or .edu.gh');
-      } else if (res.needsEmailVerification) {
-        navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`);
       } else {
-        navigate('/');
+        navigate('/add-photos');
       }
     } else {
       // Login mode
@@ -139,9 +137,6 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
 
       if (!res.success) {
         setErrorMessage(res.error || 'Unable to log in with this account');
-        if (res.needsEmailVerification) {
-          navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`);
-        }
       } else {
         navigate('/');
       }
@@ -396,7 +391,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
                 ? 'Creating Account...'
                 : 'Signing In...'
               : mode === 'signup'
-              ? 'Verify & Create Account'
+              ? 'Create Account'
               : 'Sign In'}
           </span>
           {!submitting && <ArrowRight className="w-4 h-4" />}

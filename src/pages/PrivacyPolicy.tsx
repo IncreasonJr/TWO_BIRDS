@@ -66,7 +66,7 @@ export const PrivacyPolicy: React.FC = () => {
             To provide genuine, verified college dating connections, we collect the following categories of information:
           </p>
           <ul className="space-y-1.5 text-xs text-[#FFFFFF]/80 list-disc list-inside pl-1 font-normal">
-            <li><strong className="text-[#FFFFFF]">University (.edu / .edu.gh) Email & Verification:</strong> Your official university email address ending in .edu or .edu.gh, collected strictly to verify active university enrollment and campus safety. Your university email address is never shared with or displayed to other students and is never sold.</li>
+            <li><strong className="text-[#FFFFFF]">University (.edu / .edu.gh) Email:</strong> Your official university email address ending in .edu or .edu.gh, collected to confirm university affiliation and campus safety. We verify that your email belongs to a university (.edu or .edu.gh) domain at signup. No additional verification is required. Your university email address is never shared with or displayed to other students and is never sold.</li>
             <li><strong className="text-[#FFFFFF]">Profile Information:</strong> Your name, age (18+), university name, academic major, graduation year, bio, and personal interests.</li>
             <li><strong className="text-[#FFFFFF]">Photos & Media:</strong> Images you choose to upload to your profile or audio voice notes you share in direct match chats.</li>
             <li><strong className="text-[#FFFFFF]">App Activity & Swipes:</strong> Swipe decisions (likes, passes), mutual matches, conversation messages, timestamps, and interaction history.</li>

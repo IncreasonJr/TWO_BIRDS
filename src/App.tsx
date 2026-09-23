@@ -39,7 +39,7 @@ const PageLoadingFallback: React.FC = () => (
 );
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser, authUser, isAuthenticated, isEmailVerified, loading } = useUser();
+  const { currentUser, authUser, isAuthenticated, loading } = useUser();
   const location = useLocation();
 
   if (loading) {
@@ -61,12 +61,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/signup" replace />;
   }
 
-  // Signed in but email unconfirmed -> redirect to verify-email
-  if (!isEmailVerified) {
-    return <Navigate to={`/verify-email?email=${encodeURIComponent(authUser.email || '')}`} replace />;
-  }
-
-  // Authenticated and verified
+  // Authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signup" replace />;
   }

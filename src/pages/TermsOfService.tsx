@@ -60,10 +60,10 @@ export const TermsOfService: React.FC = () => {
         {/* 2. Eligibility */}
         <div className="bg-[#333333] border border-[#4A4A4A] rounded-2xl p-4 space-y-2 shadow-sm">
           <h2 className="text-sm font-bold text-[#C9A84C] flex items-center gap-2 font-serif">
-            <span>2. Eligibility & Student Verification</span>
+            <span>2. Eligibility</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            To use Two Birds, you must be at least <strong className="text-[#FFFFFF]">18 years of age</strong> and hold a valid, active university email address ending in <strong className="text-[#C9A84C]">.edu or .edu.gh</strong>. Two Birds is exclusively for verified college students. Any account registered without verified student credentials or operated by non-students will be banned immediately.
+            To use Two Birds, you must be at least <strong className="text-[#FFFFFF]">18 years of age</strong> and hold a valid university email address ending in <strong className="text-[#C9A84C]">.edu or .edu.gh</strong>. Two Birds is exclusively for college students. Any account registered with non-university credentials or operated by non-students will be banned immediately.
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export const TermsOfService: React.FC = () => {
             <span>7. Disclaimers</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            Two Birds is provided on an "AS IS" and "AS AVAILABLE" basis. While we verify student university (.edu or .edu.gh) email addresses, Two Birds does not conduct criminal background checks or screen user conduct outside the App. You are solely responsible for your interactions and should always practice campus safety precautions when meeting connections in person.
+            Two Birds is provided on an "AS IS" and "AS AVAILABLE" basis. While we require a university (.edu or .edu.gh) email address at registration, Two Birds does not conduct criminal background checks or screen user conduct outside the App. You are solely responsible for your interactions and should always practice campus safety precautions when meeting connections in person.
           </p>
         </div>
 

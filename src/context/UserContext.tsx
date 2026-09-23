@@ -86,17 +86,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return 0;
   });
 
-  // Calculate email verification status
+  // Calculate email verification status (auto-confirmed)
   const isEmailVerified = useMemo(() => {
-    if (!authUser) return false;
-    return !!(authUser.email_confirmed_at || (authUser as any).confirmed_at);
-  }, [authUser]);
+    return true;
+  }, []);
 
-  // Is user authenticated and verified
+  // Is user authenticated
   const isAuthenticated = useMemo(() => {
-    if (!session || !authUser) return false;
-    return isEmailVerified;
-  }, [session, authUser, isEmailVerified]);
+    return !!session && !!authUser;
+  }, [session, authUser]);
 
   // Sync Supabase user into currentUser profile representation
   const syncUserFromAuth = useCallback(async (user: User) => {
@@ -128,7 +126,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           gender: meta.gender || prev.gender || 'Other',
           bio: meta.bio !== undefined ? meta.bio : prev.bio,
           photos: [],
-          verifiedCampus: !!(user.email_confirmed_at || (user as any).confirmed_at),
+          verifiedCampus: true,
         }));
       }
 
@@ -406,15 +404,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (authData?.user) {
+      if (authData.session) {
+        setSession(authData.session);
+      }
       await syncUserFromAuth(authData.user);
-      const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
       return {
         success: true,
-        needsEmailVerification: !isConfirmed,
       };
     }
 
-    return { success: true, needsEmailVerification: true };
+    return { success: true };
   }, [syncUserFromAuth]);
 
   /**
@@ -489,11 +488,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: authData, error } = await signInWithEmail(trimmed, password);
 
     if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed')) {
+      const msg = error.message.toLowerCase();
+      if (msg.includes('invalid login credentials') || msg.includes('invalid_grant')) {
         return {
           success: false,
-          error: 'Please check your inbox and verify your .edu email before logging in.',
-          needsEmailVerification: true,
+          error: 'No account found with these credentials. Please check your details or sign up.',
         };
       }
       return {
@@ -505,16 +504,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (authData?.user) {
       setSession(authData.session);
       await syncUserFromAuth(authData.user);
-
-      const isConfirmed = !!(authData.user.email_confirmed_at || (authData.user as any).confirmed_at);
-      if (!isConfirmed) {
-        return {
-          success: false,
-          error: 'Please check your inbox and verify your .edu email before logging in.',
-          needsEmailVerification: true,
-        };
-      }
-
       return { success: true };
     }
 

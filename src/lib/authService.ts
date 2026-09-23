@@ -36,9 +36,7 @@ export async function signUpWithEmail(
   }
 
   try {
-    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-email` : undefined;
-
-    const { data, error } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: trimmedEmail,
       password,
       options: {
@@ -50,20 +48,20 @@ export async function signUpWithEmail(
           gender: metadata.gender || 'Other',
           bio: metadata.bio?.trim() || '',
         },
-        emailRedirectTo: redirectUrl,
       },
     });
 
-    if (error) {
-      return { data: null, error };
+    if (signUpError) {
+      return { data: null, error: signUpError };
     }
 
     // Step 10: Minimal Profile Sync (placeholder table upsert)
-    if (data.user) {
+    const userId = signUpData.user?.id;
+    if (userId) {
       try {
         await supabase.from('profiles').upsert({
-          id: data.user.id,
-          email: data.user.email,
+          id: userId,
+          email: signUpData.user?.email || trimmedEmail,
           name: metadata.name.trim(),
           university: metadata.university.trim() || 'Stanford University',
           major: metadata.major.trim(),
@@ -77,7 +75,19 @@ export async function signUpWithEmail(
       }
     }
 
-    return { data, error: null };
+    // Auto-login: If signUp did not establish a session immediately, sign in right away
+    let session = signUpData.session;
+    let user = signUpData.user;
+
+    if (!session) {
+      const signInRes = await signInWithEmail(trimmedEmail, password);
+      if (signInRes.data?.session) {
+        session = signInRes.data.session;
+        user = signInRes.data.user;
+      }
+    }
+
+    return { data: { user, session }, error: null };
   } catch (err: any) {
     return { data: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
@@ -159,20 +169,8 @@ export async function sendPasswordReset(email: string): Promise<{ error: Error |
 }
 
 /**
- * Resend verification email for unconfirmed accounts.
+ * Resend verification email (deprecated - accounts are auto-confirmed at signup).
  */
-export async function resendVerificationEmail(email: string): Promise<{ error: Error | null }> {
-  try {
-    const redirectUrl = typeof window !== 'undefined' ? `${window.location.origin}/verify-email` : undefined;
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email: email.trim(),
-      options: {
-        emailRedirectTo: redirectUrl,
-      },
-    });
-    return { error: error || null };
-  } catch (err: any) {
-    return { error: err instanceof Error ? err : new Error(String(err)) };
-  }
+export async function resendVerificationEmail(_email: string): Promise<{ error: Error | null }> {
+  return { error: null };
 }
