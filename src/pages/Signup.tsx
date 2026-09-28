@@ -29,6 +29,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
   const [name, setName] = useState('');
   const [university, setUniversity] = useState('Stanford University');
   const [major, setMajor] = useState('');
+  const [gender, setGender] = useState<'Male' | 'Female' | ''>('');
   const [age, setAge] = useState<number>(20);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -76,6 +77,11 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
+      if (!gender) {
+        setErrorMessage('Please select your gender');
+        return;
+      }
+
       if (!age || Number(age) < 18) {
         setErrorMessage('You must be at least 18 years of age to join Two Birds.');
         return;
@@ -108,6 +114,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
           email,
           university,
           major,
+          gender,
           age: Number(age) || 20,
         },
         password
@@ -374,6 +381,40 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
                   required
                 />
               </div>
+            </div>
+
+            {/* Gender Field: I am a... */}
+            <div>
+              <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
+                I am a... *
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGender('Male')}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                    gender === 'Male'
+                      ? 'bg-[#C9A84C] text-[#1A1A1A] border-[#C9A84C] shadow-glow-gold'
+                      : 'bg-[#333333] text-[#A0A0A0] border-[#4A4A4A] hover:text-[#FFFFFF] hover:border-[#777777]'
+                  }`}
+                >
+                  <span>Male</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGender('Female')}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                    gender === 'Female'
+                      ? 'bg-[#C9A84C] text-[#1A1A1A] border-[#C9A84C] shadow-glow-gold'
+                      : 'bg-[#333333] text-[#A0A0A0] border-[#4A4A4A] hover:text-[#FFFFFF] hover:border-[#777777]'
+                  }`}
+                >
+                  <span>Female</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-[#A0A0A0] mt-1 font-medium">
+                Used for matching. Not shown publicly on your profile.
+              </p>
             </div>
           </>
         )}

@@ -167,17 +167,23 @@ export const Profile: React.FC = () => {
   const [formName, setFormName] = useState<string>(currentUser.name);
   const [formUniversity, setFormUniversity] = useState<string>(currentUser.university || 'Stanford University');
   const [formMajor, setFormMajor] = useState<string>(currentUser.major);
+  const [formGender, setFormGender] = useState<string>(
+    currentUser.gender === 'Male' || currentUser.gender === 'Female' ? currentUser.gender : ''
+  );
   const [formYear, setFormYear] = useState<string>(currentUser.year || 'Junior');
   const [formBio, setFormBio] = useState<string>(currentUser.bio);
   const [formInterests, setFormInterests] = useState<string[]>(currentUser.interests || []);
 
   // Validation Errors
-  const [errors, setErrors] = useState<{ name?: string; bio?: string; interests?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; bio?: string; interests?: string; gender?: string }>({});
 
   const handleOpenEditor = () => {
     setFormName(currentUser.name);
     setFormUniversity(currentUser.university || 'Stanford University');
     setFormMajor(currentUser.major);
+    setFormGender(
+      currentUser.gender === 'Male' || currentUser.gender === 'Female' ? currentUser.gender : ''
+    );
     setFormYear(currentUser.year || 'Junior');
     setFormBio(currentUser.bio);
     setFormInterests([...(currentUser.interests || [])]);
@@ -196,10 +202,14 @@ export const Profile: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { name?: string; bio?: string; interests?: string } = {};
+    const newErrors: { name?: string; bio?: string; interests?: string; gender?: string } = {};
 
     if (!formName || formName.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    if (!formGender || (formGender !== 'Male' && formGender !== 'Female')) {
+      newErrors.gender = 'Please select your gender';
     }
 
     if (formBio && formBio.length > 150) {
@@ -219,6 +229,7 @@ export const Profile: React.FC = () => {
       name: formName.trim(),
       university: formUniversity.trim() || 'Stanford University',
       major: formMajor.trim(),
+      gender: formGender,
       year: formYear as any,
       bio: formBio.trim(),
       interests: formInterests,
@@ -397,6 +408,27 @@ export const Profile: React.FC = () => {
           Edit Profile
         </button>
       </div>
+
+      {/* Gender Setup Prompt Banner for Existing Users */}
+      {(!currentUser.gender || (currentUser.gender !== 'Male' && currentUser.gender !== 'Female')) && (
+        <div className="bg-[#333333] border border-[#C9A84C]/50 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-left shadow-md shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#C9A84C]/20 border border-[#C9A84C]/40 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-4 h-4 text-[#C9A84C]" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-[#FFFFFF]">Update your gender</p>
+              <p className="text-[11px] text-[#A0A0A0]">Select Male or Female for campus matching.</p>
+            </div>
+          </div>
+          <button
+            onClick={handleOpenEditor}
+            className="px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shrink-0 hover:brightness-110 active:scale-95 transition shadow-sm"
+          >
+            Update
+          </button>
+        </div>
+      )}
 
       {/* 2. PROFILE STATS GRID */}
       <div className="grid grid-cols-3 gap-2 shrink-0">
@@ -1063,6 +1095,49 @@ export const Profile: React.FC = () => {
                     className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
                     placeholder="e.g. Computer Science"
                   />
+                </div>
+
+                {/* Gender Input */}
+                <div>
+                  <label className="block font-bold text-[#FFFFFF] mb-1">I am a... *</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormGender('Male');
+                        if (errors.gender) setErrors((prev) => ({ ...prev, gender: undefined }));
+                      }}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                        formGender === 'Male'
+                          ? 'bg-[#C9A84C] text-[#1A1A1A] border-[#C9A84C] shadow-glow-gold'
+                          : 'bg-[#1A1A1A] text-[#A0A0A0] border-[#4A4A4A] hover:text-[#FFFFFF] hover:border-[#777777]'
+                      }`}
+                    >
+                      <span>Male</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormGender('Female');
+                        if (errors.gender) setErrors((prev) => ({ ...prev, gender: undefined }));
+                      }}
+                      className={`py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
+                        formGender === 'Female'
+                          ? 'bg-[#C9A84C] text-[#1A1A1A] border-[#C9A84C] shadow-glow-gold'
+                          : 'bg-[#1A1A1A] text-[#A0A0A0] border-[#4A4A4A] hover:text-[#FFFFFF] hover:border-[#777777]'
+                      }`}
+                    >
+                      <span>Female</span>
+                    </button>
+                  </div>
+                  {errors.gender && (
+                    <p className="text-[11px] text-red-400 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> {errors.gender}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-[#A0A0A0] mt-1 font-medium">
+                    Used for matching. Not shown publicly on your profile.
+                  </p>
                 </div>
 
                 {/* University Input */}

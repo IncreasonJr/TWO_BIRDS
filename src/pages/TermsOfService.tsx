@@ -73,7 +73,7 @@ export const TermsOfService: React.FC = () => {
             <span>3. User Accounts</span>
           </h2>
           <p className="text-xs text-[#FFFFFF]/90 leading-relaxed">
-            You are responsible for safeguarding your login credentials and for all interactions that take place under your account. You agree to provide accurate, honest profile information and to keep your university email address up to date. You may only create one account for your personal use.
+            You are responsible for safeguarding your login credentials and for all interactions that take place under your account. You agree to provide accurate, honest profile information (including your age and gender for campus matching) and to keep your university email address up to date. You may only create one account for your personal use.
           </p>
         </div>
 
