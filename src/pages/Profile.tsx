@@ -41,9 +41,14 @@ import {
   Image as ImageIcon,
   Ban,
   BookOpen,
-  LifeBuoy
+  LifeBuoy,
+  Crown,
+  CreditCard,
+  Smartphone,
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
+import { useSubscription } from '../hooks/useSubscription';
+import { PremiumUpgradeModal } from '../components/PremiumUpgradeModal';
 
 const AVAILABLE_INTERESTS = [
   "CS & AI",
@@ -84,6 +89,8 @@ export const Profile: React.FC = () => {
   const navigate = useNavigate();
 
   // Modal & Toast States
+  const subscription = useSubscription();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false);
   const [isEditorOpen, setIsEditorOpen] = useState<boolean>(false);
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>('');
@@ -454,6 +461,114 @@ export const Profile: React.FC = () => {
           </div>
           <p className="text-lg font-extrabold text-[#C9A84C]">{completionPercentage}%</p>
           <p className="text-[9px] font-bold text-[#A0A0A0] uppercase tracking-wider">Complete</p>
+        </div>
+      </div>
+
+      {/* 2.2 TWO BIRDS PREMIUM SUBSCRIPTION CARD */}
+      <div className="rounded-2xl border border-[#C9A84C]/50 bg-gradient-to-br from-[#2A2415] to-[#1F1F1F] p-4 shadow-xl shrink-0 space-y-3 relative overflow-hidden">
+        {/* Ambient gold glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-[#C9A84C]/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="flex items-start justify-between relative z-10">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#C9A84C] text-[#1A1A1A] flex items-center justify-center shadow-glow-gold shrink-0">
+              <Crown className="w-5 h-5 fill-[#1A1A1A]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-extrabold font-serif text-[#FFFFFF]">Two Birds Premium</h3>
+                {subscription.isPremium && (
+                  <span className="px-2 py-0.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-[9px] font-black uppercase tracking-wider">
+                    {subscription.isInGracePeriod ? 'Grace Period' : 'Active'}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-[#A0A0A0]">
+                {subscription.isPremium
+                  ? subscription.isInGracePeriod
+                    ? '24-hour grace period active'
+                    : `${subscription.daysRemaining} days remaining`
+                  : subscription.isExpired
+                  ? 'Your subscription has expired'
+                  : 'GHS 47.34 / month • Unlock filters & gold badge'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic Status / Actions */}
+        <div className="pt-2 border-t border-[#4A4A4A]/60 flex items-center justify-between text-xs relative z-10">
+          {subscription.isPremium ? (
+            subscription.isInGracePeriod ? (
+              <>
+                <p className="text-[11px] text-amber-300 font-medium">
+                  Grace period active. Renew to keep your filters!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-xs shadow-glow-gold hover:brightness-110 active:scale-95 transition"
+                >
+                  Renew Now
+                </button>
+              </>
+            ) : subscription.isCardUser ? (
+              <>
+                <div className="flex items-center gap-1.5 text-[11px] text-[#A0A0A0]">
+                  <CreditCard className="w-3.5 h-3.5 text-[#C9A84C]" />
+                  <span>Auto-renews on {subscription.formattedExpiry}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-3 py-1 rounded-xl bg-[#333333] hover:bg-[#4A4A4A] text-[#C9A84C] text-xs font-bold transition border border-[#4A4A4A]"
+                >
+                  Manage
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 text-[11px] text-[#A0A0A0]">
+                  <Smartphone className="w-3.5 h-3.5 text-[#C9A84C]" />
+                  <span>Expires on {subscription.formattedExpiry}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-xs shadow-glow-gold hover:brightness-110 active:scale-95 transition"
+                >
+                  Renew Now
+                </button>
+              </>
+            )
+          ) : subscription.isExpired ? (
+            <>
+              <p className="text-[11px] text-red-300 font-medium">
+                Your premium has expired. Renew to restore perks.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsUpgradeModalOpen(true)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-xs shadow-glow-gold hover:brightness-110 active:scale-95 transition"
+              >
+                Reactivate
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1 text-[11px] text-[#A0A0A0]">
+                <Sparkles className="w-3.5 h-3.5 text-[#C9A84C]" />
+                <span>Gender Filter • Gold Badge • Boost</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUpgradeModalOpen(true)}
+                className="px-4 py-1.5 rounded-xl bg-[#C9A84C] text-[#1A1A1A] font-extrabold text-xs shadow-glow-gold hover:brightness-110 active:scale-95 transition"
+              >
+                Upgrade to Premium
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -1337,6 +1452,13 @@ export const Profile: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* PREMIUM UPGRADE & RENEWAL MODAL */}
+      <PremiumUpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        isRenewal={subscription.isExpired || subscription.isInGracePeriod}
+      />
     </div>
   );
 };

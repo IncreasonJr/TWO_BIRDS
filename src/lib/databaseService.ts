@@ -24,6 +24,13 @@ export function mapProfileRowToUserProfile(row: any): UserProfile {
     onlineStatus: 'online',
     lastActive: row.updated_at || new Date().toISOString(),
     createdAt: row.created_at || new Date().toISOString(),
+    isPremium: Boolean(row.is_premium),
+    premiumExpiresAt: row.premium_expires_at || null,
+    paystackAuthorizationCode: row.paystack_authorization_code || null,
+    paystackCustomerCode: row.paystack_customer_code || null,
+    paystackSubscriptionCode: row.paystack_subscription_code || null,
+    paystackChannel: row.paystack_channel || (row.paystack_authorization_code ? 'card' : null),
+    lastReminderSentAt: row.last_reminder_sent_at || null,
   };
 }
 
@@ -106,6 +113,13 @@ export async function updateProfile(
     if (updates.gender !== undefined) payload.gender = updates.gender;
     if (updates.photos !== undefined) payload.photos = updates.photos;
     if (updates.interests !== undefined) payload.interests = updates.interests;
+    if (updates.isPremium !== undefined) payload.is_premium = updates.isPremium;
+    if (updates.premiumExpiresAt !== undefined) payload.premium_expires_at = updates.premiumExpiresAt;
+    if (updates.paystackAuthorizationCode !== undefined) payload.paystack_authorization_code = updates.paystackAuthorizationCode;
+    if (updates.paystackCustomerCode !== undefined) payload.paystack_customer_code = updates.paystackCustomerCode;
+    if (updates.paystackSubscriptionCode !== undefined) payload.paystack_subscription_code = updates.paystackSubscriptionCode;
+    if (updates.paystackChannel !== undefined) payload.paystack_channel = updates.paystackChannel;
+    if (updates.lastReminderSentAt !== undefined) payload.last_reminder_sent_at = updates.lastReminderSentAt;
 
     const { error } = await supabase
       .from('profiles')

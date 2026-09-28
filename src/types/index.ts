@@ -24,6 +24,13 @@ export interface UserProfile {
   spotifyTopArtist?: string;
   dormOrCampus?: string;
   createdAt?: string;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
+  paystackAuthorizationCode?: string | null;
+  paystackCustomerCode?: string | null;
+  paystackSubscriptionCode?: string | null;
+  paystackChannel?: 'card' | 'mobile_money' | string | null;
+  lastReminderSentAt?: string | null;
 }
 
 export interface SwipeAction {
