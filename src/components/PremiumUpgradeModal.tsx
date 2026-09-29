@@ -100,7 +100,7 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 15 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-sm bg-[#1F1F1F] border border-[#C9A84C]/60 rounded-3xl p-5 shadow-2xl overflow-hidden text-[#FFFFFF] z-10"
+          className="relative w-full max-w-sm max-h-[90vh] bg-[#1F1F1F] border border-[#C9A84C]/60 rounded-3xl p-5 shadow-2xl overflow-y-auto text-[#FFFFFF] z-10"
         >
           {/* Ambient Gold Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-28 bg-[#C9A84C]/15 rounded-full blur-2xl pointer-events-none" />
@@ -115,21 +115,18 @@ export const PremiumUpgradeModal: React.FC<PremiumUpgradeModalProps> = ({
 
           {!isSuccess ? (
             <div className="space-y-4">
-              {/* Header Badge */}
-              <div className="text-center space-y-1 pt-1">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#C9A84C]/20 border border-[#C9A84C] text-[#C9A84C] shadow-glow-gold mb-1">
-                  <Crown className="w-6 h-6 fill-[#C9A84C]" />
+              {/* Header Badge & Heading */}
+              <div className="text-center flex flex-col items-center justify-center pt-4 pb-1">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#C9A84C]/20 border border-[#C9A84C] text-[#C9A84C] shadow-glow-gold mb-3 shrink-0">
+                  <Crown className="w-8 h-8 fill-[#C9A84C]" />
                 </div>
-                <h2 className="text-xl font-serif font-extrabold tracking-tight text-[#FFFFFF]">
-                  {isRenewal ? 'Renew Two Birds Premium' : 'Upgrade to Premium'}
+                <h2 className="text-lg sm:text-xl font-serif font-extrabold tracking-tight text-[#FFFFFF] leading-snug px-2 max-w-[270px]">
+                  {isRenewal ? 'Renew Two Birds Premium' : 'Unlock the full campus experience'}
                 </h2>
-                <p className="text-xs text-[#A0A0A0]">
-                  Unlock exclusive campus features & prioritize your profile.
-                </p>
               </div>
 
               {/* Price Banner */}
-              <div className="p-3.5 rounded-2xl bg-[#2A2A2A] border border-[#4A4A4A] flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-[#2A2A2A] border border-[#4A4A4A] flex items-center justify-between mt-2">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-wider text-[#A0A0A0]">
                     Monthly Subscription

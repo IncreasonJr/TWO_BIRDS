@@ -109,13 +109,14 @@ const AppContent: React.FC = () => {
     });
   }, [navigate]);
 
-  const publicRoutes = ['/signup', '/login', '/verify-email', '/forgot-password', '/privacy', '/terms', '/community-guidelines'];
+  const publicRoutes = ['/signup', '/login', '/verify-email', '/forgot-password', '/privacy', '/terms', '/community-guidelines', '/premium'];
   const isPublicRoute = publicRoutes.some((route) => location.pathname === route);
   const isDedicatedScreen =
     location.pathname === '/add-photos' ||
     location.pathname === '/blocked-users' ||
     location.pathname === '/delete-account' ||
     location.pathname === '/community-guidelines' ||
+    location.pathname === '/premium' ||
     location.pathname === '/notifications';
   const showNav = !isPublicRoute && !isDedicatedScreen && isAuthenticated;
 
