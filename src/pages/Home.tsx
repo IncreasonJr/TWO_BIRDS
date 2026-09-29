@@ -1,12 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipe } from '../hooks/useSwipe';
 import { useMatches } from '../hooks/useMatches';
 import { useUser } from '../context/UserContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { SwipeCard } from '../components/SwipeCard';
 import { SwipeControls } from '../components/SwipeControls';
-import { Heart, Sparkles, MessageCircle, RefreshCw } from 'lucide-react';
+import { GenderFilter } from '../components/GenderFilter';
+import { PremiumUpgradeModal } from '../components/PremiumUpgradeModal';
+import { Heart, Sparkles, MessageCircle, RefreshCw, Filter, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const BANNER_STORAGE_KEY = 'twobirds_dismiss_premium_banner';
 
 export const Home: React.FC = () => {
   const {
@@ -21,12 +26,33 @@ export const Home: React.FC = () => {
     newMatch,
     createdMatchObj,
     dismissMatchModal,
-    resetFeed
+    resetFeed,
+    reloadFeed,
   } = useSwipe();
 
   const { createMatch, setActiveMatchId } = useMatches();
   const { currentUser } = useUser();
+  const { isPremium } = useSubscription();
   const navigate = useNavigate();
+
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(BANNER_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const handleDismissBanner = () => {
+    setIsBannerDismissed(true);
+    try {
+      localStorage.setItem(BANNER_STORAGE_KEY, 'true');
+    } catch {
+      // ignore
+    }
+  };
 
   const onSwipeAction = (direction: 'left' | 'right') => {
     handleSwipe(direction);
@@ -44,6 +70,63 @@ export const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
+      {/* Free User Upsell Banner */}
+      {!isPremium && !isBannerDismissed && (
+        <div className="mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-[#2A2A2A] via-[#333333] to-[#2A2A2A] border border-[#C9A84C]/40 flex items-center justify-between gap-2 shadow-md shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="w-4 h-4 text-[#C9A84C] shrink-0" />
+            <p className="text-[11px] text-[#FFFFFF] font-medium truncate">
+              ✨ Filter by gender and see your ideal matches — <span className="text-[#C9A84C] font-semibold">Upgrade to Premium</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="px-2.5 py-1 rounded-xl bg-[#C9A84C] text-[#1A1A1A] text-[10px] font-extrabold shadow-sm hover:bg-[#C9A84C]/90 transition active:scale-95"
+            >
+              Upgrade
+            </button>
+            <button
+              onClick={handleDismissBanner}
+              className="p-1 text-[#A0A0A0] hover:text-[#FFFFFF] transition"
+              aria-label="Dismiss banner"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Discovery Top Bar with Gender Filter Button */}
+      <div className="flex items-center justify-between px-1 mb-2 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-[#A0A0A0] uppercase tracking-wider">Discover</span>
+          {isPremium && currentUser?.preferredGender && currentUser.preferredGender !== 'Everyone' && (
+            <span className="px-2 py-0.5 rounded-full bg-[#C9A84C]/20 border border-[#C9A84C]/50 text-[#C9A84C] text-[10px] font-extrabold">
+              {currentUser.preferredGender}
+            </span>
+          )}
+        </div>
+
+        <button
+          onClick={() => setIsFilterOpen(true)}
+          className={`px-2.5 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-bold transition-all duration-200 active:scale-95 ${
+            isPremium && currentUser?.preferredGender && currentUser.preferredGender !== 'Everyone'
+              ? 'bg-[#C9A84C]/15 border-[#C9A84C] text-[#C9A84C] shadow-glow-gold'
+              : 'bg-[#2A2A2A] border-[#4A4A4A] text-[#D0D0D0] hover:text-[#FFFFFF] hover:border-[#777777]'
+          }`}
+          title="Filter discovery feed"
+          aria-label="Filter discovery feed"
+        >
+          <Filter className="w-3.5 h-3.5 text-[#C9A84C]" />
+          <span className="text-[11px]">
+            {isPremium && currentUser?.preferredGender && currentUser.preferredGender !== 'Everyone'
+              ? currentUser.preferredGender
+              : 'Filter'}
+          </span>
+        </button>
+      </div>
+
       {/* 3-Card Stack Area */}
       <div className="relative flex-1 mb-[12px] w-full min-h-0 overflow-hidden">
         {loading ? (
@@ -207,6 +290,25 @@ export const Home: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Gender Filter Modal */}
+      <GenderFilter
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        onOpenUpgradeModal={() => {
+          setIsFilterOpen(false);
+          setIsUpgradeModalOpen(true);
+        }}
+        onFilterChanged={() => {
+          reloadFeed();
+        }}
+      />
+
+      {/* Premium Upgrade Modal */}
+      <PremiumUpgradeModal
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+      />
     </div>
   );
 };

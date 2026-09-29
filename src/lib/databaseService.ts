@@ -31,6 +31,7 @@ export function mapProfileRowToUserProfile(row: any): UserProfile {
     paystackSubscriptionCode: row.paystack_subscription_code || null,
     paystackChannel: row.paystack_channel || (row.paystack_authorization_code ? 'card' : null),
     lastReminderSentAt: row.last_reminder_sent_at || null,
+    preferredGender: row.preferred_gender || 'Everyone',
   };
 }
 
@@ -61,9 +62,34 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
 
 export async function getAllProfilesExcept(
   userId: string,
-  swipedIds: string[] = []
+  swipedIds: string[] = [],
+  preferredGender?: string,
+  isPremium?: boolean
 ): Promise<UserProfile[]> {
   try {
+    let activeIsPremium = isPremium;
+    let activePreferredGender = preferredGender;
+
+    if (activeIsPremium === undefined || activePreferredGender === undefined) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('is_premium, preferred_gender, premium_expires_at')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userProfile) {
+        const expiresAt = userProfile.premium_expires_at ? new Date(userProfile.premium_expires_at).getTime() : 0;
+        const now = Date.now();
+        const inGrace = now <= (expiresAt + 24 * 60 * 60 * 1000);
+        if (activeIsPremium === undefined) {
+          activeIsPremium = Boolean(userProfile.is_premium && (!expiresAt || inGrace));
+        }
+        if (activePreferredGender === undefined) {
+          activePreferredGender = userProfile.preferred_gender || 'Everyone';
+        }
+      }
+    }
+
     const blockedIds = await getAllBlockedRelationIds(userId);
     const rawExcludedIds = Array.from(new Set([...swipedIds, ...blockedIds]));
     // Strictly validate UUIDs to guarantee filter safety
@@ -79,6 +105,16 @@ export async function getAllProfilesExcept(
       // Exclude IDs already swiped on or blocked
       const formattedFilter = `(${excludedIds.join(',')})`;
       query = query.not('id', 'in', formattedFilter);
+    }
+
+    // Step 6: If user is PREMIUM, filter by preferred_gender
+    if (activeIsPremium) {
+      if (activePreferredGender === 'Women') {
+        query = query.eq('gender', 'Female');
+      } else if (activePreferredGender === 'Men') {
+        query = query.eq('gender', 'Male');
+      }
+      // 'Everyone' does not filter by gender
     }
 
     const { data, error } = await query.order('created_at', { ascending: false });
@@ -120,6 +156,7 @@ export async function updateProfile(
     if (updates.paystackSubscriptionCode !== undefined) payload.paystack_subscription_code = updates.paystackSubscriptionCode;
     if (updates.paystackChannel !== undefined) payload.paystack_channel = updates.paystackChannel;
     if (updates.lastReminderSentAt !== undefined) payload.last_reminder_sent_at = updates.lastReminderSentAt;
+    if (updates.preferredGender !== undefined) payload.preferred_gender = updates.preferredGender;
 
     const { error } = await supabase
       .from('profiles')

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { Sparkles, Search, ChevronRight, Heart, RefreshCw } from 'lucide-react';
+import { PremiumBadge } from '../components/PremiumBadge';
 
 export const Matches: React.FC = () => {
   const { matches, setActiveMatchId, loadingMatches } = useMatches();
@@ -99,8 +100,13 @@ export const Matches: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <span className="text-[11px] font-bold text-[#FFFFFF] group-hover:text-[#C9A84C] truncate max-w-[64px]">
-                      {match.name.split(' ')[0]}
+                    <span className="text-[11px] font-bold text-[#FFFFFF] group-hover:text-[#C9A84C] truncate max-w-[64px] flex items-center justify-center gap-0.5">
+                      <span className="truncate">{match.name.split(' ')[0]}</span>
+                      <PremiumBadge
+                        isPremium={match.user?.isPremium || (match.user as any)?.is_premium || (match as any).is_premium}
+                        size={11}
+                        showTooltip={false}
+                      />
                     </span>
                   </button>
                 );
@@ -117,6 +123,9 @@ export const Matches: React.FC = () => {
             <div className="space-y-2">
               {filteredMatches.map((match) => {
                 const photo = match.photos?.[0] || match.user?.photos?.[0];
+                const isMatchPremium = Boolean(
+                  match.user?.isPremium || (match.user as any)?.is_premium || (match as any).is_premium
+                );
                 return (
                   <div
                     key={match.id}
@@ -141,6 +150,7 @@ export const Matches: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <h4 className="text-sm font-bold text-[#FFFFFF] truncate">{match.name}</h4>
+                        <PremiumBadge isPremium={isMatchPremium} size={14} />
                         {match.unread && (
                           <span className="w-2 h-2 rounded-full bg-[#C9A84C] shadow-glow-gold flex-shrink-0" />
                         )}

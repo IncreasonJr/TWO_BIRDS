@@ -45,10 +45,12 @@ import {
   Crown,
   CreditCard,
   Smartphone,
+  Lock,
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 import { useSubscription } from '../hooks/useSubscription';
 import { PremiumUpgradeModal } from '../components/PremiumUpgradeModal';
+import { PremiumBadge } from '../components/PremiumBadge';
 
 const AVAILABLE_INTERESTS = [
   "CS & AI",
@@ -180,6 +182,9 @@ export const Profile: React.FC = () => {
   const [formYear, setFormYear] = useState<string>(currentUser.year || 'Junior');
   const [formBio, setFormBio] = useState<string>(currentUser.bio);
   const [formInterests, setFormInterests] = useState<string[]>(currentUser.interests || []);
+  const [formPreferredGender, setFormPreferredGender] = useState<'Women' | 'Men' | 'Everyone'>(
+    (currentUser.preferredGender as any) || 'Everyone'
+  );
 
   // Validation Errors
   const [errors, setErrors] = useState<{ name?: string; bio?: string; interests?: string; gender?: string }>({});
@@ -191,6 +196,7 @@ export const Profile: React.FC = () => {
     setFormGender(
       currentUser.gender === 'Male' || currentUser.gender === 'Female' ? currentUser.gender : ''
     );
+    setFormPreferredGender((currentUser.preferredGender as any) || 'Everyone');
     setFormYear(currentUser.year || 'Junior');
     setFormBio(currentUser.bio);
     setFormInterests([...(currentUser.interests || [])]);
@@ -237,6 +243,7 @@ export const Profile: React.FC = () => {
       university: formUniversity.trim() || 'Stanford University',
       major: formMajor.trim(),
       gender: formGender,
+      preferredGender: subscription.isPremium ? formPreferredGender : 'Everyone',
       year: formYear as any,
       bio: formBio.trim(),
       interests: formInterests,
@@ -389,8 +396,9 @@ export const Profile: React.FC = () => {
 
         {/* User Info */}
         <div className="space-y-0.5 z-10">
-          <h1 className="text-xl font-extrabold text-[#FFFFFF] tracking-tight font-serif">
-            {currentUser.name}, <span className="font-bold text-[#C9A84C]">{currentUser.age}</span>
+          <h1 className="text-xl font-extrabold text-[#FFFFFF] tracking-tight font-serif flex items-center justify-center gap-1.5 flex-wrap">
+            <span>{currentUser.name},</span> <span className="font-bold text-[#C9A84C]">{currentUser.age}</span>
+            <PremiumBadge isPremium={subscription.isPremium} size={18} />
           </h1>
           <p className="text-xs font-semibold text-[#A0A0A0]">
             {currentUser.major}
@@ -1252,6 +1260,64 @@ export const Profile: React.FC = () => {
                   )}
                   <p className="text-[10px] text-[#A0A0A0] mt-1 font-medium">
                     Used for matching. Not shown publicly on your profile.
+                  </p>
+                </div>
+
+                {/* Show Me / Preferred Gender */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-[#FFFFFF] text-xs">
+                      Show me...
+                    </label>
+                    {!subscription.isPremium && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-[#C9A84C]">
+                        <Crown className="w-3 h-3" /> Premium Feature
+                      </span>
+                    )}
+                  </div>
+
+                  {subscription.isPremium ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Women', 'Men', 'Everyone'] as const).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setFormPreferredGender(option)}
+                          className={`py-2 px-2 rounded-xl text-xs font-bold transition flex items-center justify-center border ${
+                            formPreferredGender === option
+                              ? 'bg-[#C9A84C] text-[#1A1A1A] border-[#C9A84C] shadow-glow-gold'
+                              : 'bg-[#1A1A1A] text-[#A0A0A0] border-[#4A4A4A] hover:text-[#FFFFFF] hover:border-[#777777]'
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 rounded-2xl bg-[#1A1A1A] border border-[#4A4A4A] space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#A0A0A0] font-medium">Current setting:</span>
+                        <span className="font-bold text-[#FFFFFF] flex items-center gap-1">
+                          <Lock className="w-3 h-3 text-[#A0A0A0]" /> Everyone
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditorOpen(false);
+                          setIsUpgradeModalOpen(true);
+                        }}
+                        className="w-full py-2 px-3 rounded-xl bg-[#C9A84C]/15 border border-[#C9A84C]/50 text-[#C9A84C] text-xs font-bold hover:bg-[#C9A84C]/25 transition flex items-center justify-center gap-1.5"
+                      >
+                        <Crown className="w-3.5 h-3.5" />
+                        Upgrade to filter by gender
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-[#A0A0A0] mt-1 font-medium">
+                    {subscription.isPremium
+                      ? 'Filter students shown in your Discovery feed.'
+                      : 'Free users see everyone. Premium users can filter by Women, Men, or Everyone.'}
                   </p>
                 </div>
 

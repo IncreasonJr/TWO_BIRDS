@@ -7,9 +7,11 @@ import {
   checkForMatch as checkMutualMatch,
 } from '../lib/databaseService';
 import { useUser } from '../context/UserContext';
+import { useSubscription } from './useSubscription';
 
 export function useSwipe() {
   const { authUser, currentUser, incrementSwipes } = useUser();
+  const { isPremium } = useSubscription();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [swipedUserIds, setSwipedUserIds] = useState<string[]>([]);
@@ -20,6 +22,7 @@ export function useSwipe() {
   const [loading, setLoading] = useState<boolean>(true);
 
   const currentUserId = authUser?.id || currentUser?.id;
+  const preferredGender = currentUser?.preferredGender || 'Everyone';
 
   // Load profiles and swiped user IDs from Supabase
   const reloadFeed = useCallback(async () => {
@@ -28,7 +31,7 @@ export function useSwipe() {
     try {
       const swiped = await getSwipedIds(currentUserId);
       setSwipedUserIds(swiped);
-      const feedProfiles = await getAllProfilesExcept(currentUserId, swiped);
+      const feedProfiles = await getAllProfilesExcept(currentUserId, swiped, preferredGender, isPremium);
       setProfiles(feedProfiles);
       setCurrentIndex(0);
     } catch (err) {
@@ -36,7 +39,7 @@ export function useSwipe() {
     } finally {
       setLoading(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, preferredGender, isPremium]);
 
   useEffect(() => {
     let mounted = true;
@@ -51,7 +54,7 @@ export function useSwipe() {
         if (!mounted) return;
         setSwipedUserIds(swiped);
 
-        const feedProfiles = await getAllProfilesExcept(currentUserId, swiped);
+        const feedProfiles = await getAllProfilesExcept(currentUserId, swiped, preferredGender, isPremium);
         if (!mounted) return;
         setProfiles(feedProfiles);
         setCurrentIndex(0);
@@ -67,7 +70,7 @@ export function useSwipe() {
     return () => {
       mounted = false;
     };
-  }, [currentUserId]);
+  }, [currentUserId, preferredGender, isPremium]);
 
   const currentProfile = profiles[currentIndex] || null;
   const nextProfile = profiles[currentIndex + 1] || null;
@@ -145,6 +148,7 @@ export function useSwipe() {
     createdMatchObj,
     dismissMatchModal,
     resetFeed,
+    reloadFeed,
     swipedUserIds,
     likedUserIds,
     remainingCount: Math.max(0, profiles.length - currentIndex),

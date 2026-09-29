@@ -31,6 +31,7 @@ import { Message } from '../types';
 import { useUser } from '../context/UserContext';
 import { ReportModal } from '../components/ReportModal';
 import { BlockModal } from '../components/BlockModal';
+import { PremiumBadge } from '../components/PremiumBadge';
 
 const ICEBREAKERS = [
   { text: "Library study session?", icon: BookOpen },
@@ -217,9 +218,12 @@ export const Chat: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-sm font-extrabold text-[#FFFFFF] group-hover:text-[#C9A84C] transition-colors font-serif">
-                {activeMatch.name}
-              </h3>
+              <div className="flex items-center gap-1.5">
+                <h3 className="text-sm font-extrabold text-[#FFFFFF] group-hover:text-[#C9A84C] transition-colors font-serif truncate">
+                  {activeMatch.name}
+                </h3>
+                <PremiumBadge isPremium={matchUser.isPremium || (matchUser as any).is_premium} size={13} />
+              </div>
               <p className="text-[10px] text-[#A0A0A0] font-semibold">
                 {activeMatch.major}
               </p>
@@ -480,8 +484,9 @@ export const Chat: React.FC = () => {
 
                   {/* Overlay Gradient Name Info */}
                   <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#1A1A1A] via-[#1A1A1A]/60 to-transparent p-4 flex flex-col justify-end">
-                    <h2 className="text-2xl font-extrabold text-[#FFFFFF] font-serif">
-                      {matchUser.name}, <span className="text-[#C9A84C]">{matchUser.age}</span>
+                    <h2 className="text-2xl font-extrabold text-[#FFFFFF] font-serif flex items-center gap-1.5 flex-wrap">
+                      <span>{matchUser.name},</span> <span className="text-[#C9A84C]">{matchUser.age}</span>
+                      <PremiumBadge isPremium={matchUser.isPremium || (matchUser as any).is_premium} size={18} />
                     </h2>
                     <div className="flex items-center gap-1.5 text-xs text-[#C9A84C] font-bold mt-0.5">
                       <GraduationCap className="w-4 h-4" />

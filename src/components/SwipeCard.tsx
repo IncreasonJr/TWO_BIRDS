@@ -5,6 +5,7 @@ import { getZodiacEmoji } from '../utils/formatters';
 import { GraduationCap, Info, X, Music, School, ChevronLeft, ChevronRight, MoreVertical, Shield, Ban } from 'lucide-react';
 import { ReportModal } from './ReportModal';
 import { BlockModal } from './BlockModal';
+import { PremiumBadge } from './PremiumBadge';
 
 interface SwipeCardProps {
   profile: UserProfile;
@@ -176,7 +177,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
           <div className="absolute bottom-0 inset-x-0 p-4 z-20 flex flex-col gap-2 text-[#FFFFFF]">
             <div className="flex items-baseline justify-between">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-2xl font-extrabold tracking-tight text-[#FFFFFF]">{profile.name}</h2>
+                <h2 className="text-2xl font-extrabold tracking-tight text-[#FFFFFF] flex items-center gap-1.5">
+                  <span>{profile.name}</span>
+                  <PremiumBadge isPremium={profile.isPremium || (profile as any).is_premium} />
+                </h2>
                 <span className="text-2xl font-light text-[#C9A84C]">{profile.age}</span>
               </div>
 
@@ -289,7 +293,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ profile, onSwipe, isFront,
               {/* Top Handle / Close Button */}
               <div className="flex items-center justify-between border-b border-[#4A4A4A] pb-3">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-extrabold text-[#FFFFFF] font-serif">{profile.name}, {profile.age}</h3>
+                  <h3 className="text-xl font-extrabold text-[#FFFFFF] font-serif flex items-center gap-1.5">
+                    <span>{profile.name}</span>
+                    <PremiumBadge isPremium={profile.isPremium || (profile as any).is_premium} />
+                    <span className="text-xl font-light text-[#C9A84C]">, {profile.age}</span>
+                  </h3>
                 </div>
                 <button
                   onClick={() => setShowInfoModal(false)}

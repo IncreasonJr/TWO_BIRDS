@@ -31,6 +31,7 @@ export interface UserProfile {
   paystackSubscriptionCode?: string | null;
   paystackChannel?: 'card' | 'mobile_money' | string | null;
   lastReminderSentAt?: string | null;
+  preferredGender?: 'Women' | 'Men' | 'Everyone' | string;
 }
 
 export interface SwipeAction {

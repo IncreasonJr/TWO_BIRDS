@@ -24,6 +24,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'));
 const BlockedUsers = lazy(() => import('./pages/BlockedUsers'));
 const DeleteAccount = lazy(() => import('./pages/DeleteAccount'));
 const CommunityGuidelines = lazy(() => import('./pages/CommunityGuidelines'));
+const Premium = lazy(() => import('./pages/Premium'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 const PageLoadingFallback: React.FC = () => (
@@ -73,6 +74,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     location.pathname === '/profile' ||
     location.pathname === '/delete-account' ||
     location.pathname === '/blocked-users' ||
+    location.pathname === '/premium' ||
     location.pathname === '/notifications';
 
   if (!hasPhotos && !isAllowedWithoutPhotos) {
@@ -147,7 +149,8 @@ const AppContent: React.FC = () => {
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
 
-              {/* Public Legal Pages */}
+              {/* Public Legal & Feature Pages */}
+              <Route path="/premium" element={<Premium />} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
 
