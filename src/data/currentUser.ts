@@ -1,8 +1,8 @@
 import { UserProfile } from '../types';
 
 export const INITIAL_CURRENT_USER: UserProfile = {
-  id: 'current-user-001',
-  uid: 'current-user-001',
+  id: '00000000-0000-0000-0000-000000000001',
+  uid: '00000000-0000-0000-0000-000000000001',
   name: 'Alex Johnson',
   email: 'alex@university.edu',
   age: 21,

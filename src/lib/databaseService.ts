@@ -35,11 +35,18 @@ export function mapProfileRowToUserProfile(row: any): UserProfile {
   };
 }
 
+export const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidUUID(id?: string | null): boolean {
+  return typeof id === 'string' && UUID_REGEX.test(id);
+}
+
 /* ==========================================================================
    PROFILES
    ========================================================================== */
 
 export async function getProfile(userId: string): Promise<UserProfile | null> {
+  if (!isValidUUID(userId)) return null;
   try {
     const { data, error } = await supabase
       .from('profiles')
@@ -66,6 +73,7 @@ export async function getAllProfilesExcept(
   preferredGender?: string,
   isPremium?: boolean
 ): Promise<UserProfile[]> {
+  if (!isValidUUID(userId)) return [];
   try {
     let activeIsPremium = isPremium;
     let activePreferredGender = preferredGender;
@@ -246,6 +254,7 @@ export async function saveSwipe(
 }
 
 export async function getSwipedIds(userId: string): Promise<string[]> {
+  if (!isValidUUID(userId)) return [];
   try {
     const { data, error } = await supabase
       .from('swipes')
@@ -340,6 +349,7 @@ export async function checkForMatch(
    ========================================================================== */
 
 export async function getUserMatches(userId: string): Promise<Match[]> {
+  if (!isValidUUID(userId)) return [];
   try {
     const blockedIds = await getAllBlockedRelationIds(userId);
     const blockedSet = new Set(blockedIds);
@@ -762,6 +772,7 @@ export async function getBlockedUserIds(userId: string): Promise<string[]> {
 }
 
 export async function getAllBlockedRelationIds(userId: string): Promise<string[]> {
+  if (!isValidUUID(userId)) return [];
   try {
     // 1. Users blocked by current user
     const { data: blockedByMe, error: err1 } = await supabase
@@ -1000,6 +1011,7 @@ export async function getUserNotifications(
   userId: string,
   limit: number = 50
 ): Promise<AppNotification[]> {
+  if (!isValidUUID(userId)) return [];
   try {
     const { data, error } = await supabase
       .from('notifications')
@@ -1021,6 +1033,7 @@ export async function getUserNotifications(
 }
 
 export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  if (!isValidUUID(userId)) return 0;
   try {
     const { count, error } = await supabase
       .from('notifications')
@@ -1131,6 +1144,15 @@ export function subscribeToNotifications(
 export async function getNotificationPreferences(
   userId: string
 ): Promise<NotificationPreferences> {
+  if (!isValidUUID(userId)) {
+    return {
+      userId,
+      pushEnabled: true,
+      matchesEnabled: true,
+      messagesEnabled: true,
+      likesEnabled: true,
+    };
+  }
   try {
     const { data, error } = await supabase
       .from('notification_preferences')
