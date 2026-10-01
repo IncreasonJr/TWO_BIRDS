@@ -46,11 +46,13 @@ import {
   CreditCard,
   Smartphone,
   Lock,
+  ChevronDown,
 } from 'lucide-react';
 import { InstallPWA } from '../components/InstallPWA';
 import { useSubscription } from '../hooks/useSubscription';
 import { PremiumUpgradeModal } from '../components/PremiumUpgradeModal';
 import { PremiumBadge } from '../components/PremiumBadge';
+import { GHANAIAN_UNIVERSITIES } from '../data/universities';
 
 const AVAILABLE_INTERESTS = [
   "CS & AI",
@@ -174,7 +176,19 @@ export const Profile: React.FC = () => {
 
   // Form State
   const [formName, setFormName] = useState<string>(currentUser.name);
-  const [formUniversity, setFormUniversity] = useState<string>(currentUser.university || 'Stanford University');
+  const isInitialUniInList = currentUser.university
+    ? (GHANAIAN_UNIVERSITIES as readonly string[]).includes(currentUser.university) && currentUser.university !== 'Other'
+    : false;
+  const [formUniversity, setFormUniversity] = useState<string>(
+    currentUser.university
+      ? (isInitialUniInList ? currentUser.university : 'Other')
+      : 'University of Ghana (UG)'
+  );
+  const [formCustomUniversity, setFormCustomUniversity] = useState<string>(
+    currentUser.university && !isInitialUniInList && currentUser.university !== 'Other'
+      ? currentUser.university
+      : ''
+  );
   const [formMajor, setFormMajor] = useState<string>(currentUser.major);
   const [formGender, setFormGender] = useState<string>(
     currentUser.gender === 'Male' || currentUser.gender === 'Female' ? currentUser.gender : ''
@@ -187,11 +201,23 @@ export const Profile: React.FC = () => {
   );
 
   // Validation Errors
-  const [errors, setErrors] = useState<{ name?: string; bio?: string; interests?: string; gender?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; bio?: string; interests?: string; gender?: string; university?: string }>({});
 
   const handleOpenEditor = () => {
     setFormName(currentUser.name);
-    setFormUniversity(currentUser.university || 'Stanford University');
+    const isUniInList = currentUser.university
+      ? (GHANAIAN_UNIVERSITIES as readonly string[]).includes(currentUser.university) && currentUser.university !== 'Other'
+      : false;
+    setFormUniversity(
+      currentUser.university
+        ? (isUniInList ? currentUser.university : 'Other')
+        : 'University of Ghana (UG)'
+    );
+    setFormCustomUniversity(
+      currentUser.university && !isUniInList && currentUser.university !== 'Other'
+        ? currentUser.university
+        : ''
+    );
     setFormMajor(currentUser.major);
     setFormGender(
       currentUser.gender === 'Male' || currentUser.gender === 'Female' ? currentUser.gender : ''
@@ -215,10 +241,17 @@ export const Profile: React.FC = () => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { name?: string; bio?: string; interests?: string; gender?: string } = {};
+    const newErrors: { name?: string; bio?: string; interests?: string; gender?: string; university?: string } = {};
 
     if (!formName || formName.trim().length < 2) {
       newErrors.name = 'Name must be at least 2 characters';
+    }
+
+    const finalUniversity = (formUniversity === 'Other' ? formCustomUniversity : formUniversity).trim();
+    if (!finalUniversity) {
+      newErrors.university = formUniversity === 'Other' ? 'Please specify your university' : 'Please select your university';
+    } else if (finalUniversity.length > 100) {
+      newErrors.university = 'University name cannot exceed 100 characters';
     }
 
     if (!formGender || (formGender !== 'Male' && formGender !== 'Female')) {
@@ -240,7 +273,7 @@ export const Profile: React.FC = () => {
 
     updateProfile({
       name: formName.trim(),
-      university: formUniversity.trim() || 'Stanford University',
+      university: finalUniversity,
       major: formMajor.trim(),
       gender: formGender,
       preferredGender: subscription.isPremium ? formPreferredGender : 'Everyone',
@@ -1321,16 +1354,60 @@ export const Profile: React.FC = () => {
                   </p>
                 </div>
 
-                {/* University Input */}
+                {/* University Dropdown Field */}
                 <div>
-                  <label className="block font-bold text-[#FFFFFF] mb-1">University Name</label>
-                  <input
-                    type="text"
-                    value={formUniversity}
-                    onChange={(e) => setFormUniversity(e.target.value)}
-                    className="w-full bg-[#1A1A1A] border border-[#4A4A4A] rounded-xl p-3 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold"
-                    placeholder="e.g. Stanford University"
-                  />
+                  <label className="block font-bold text-[#FFFFFF] mb-1">University</label>
+                  <div className="relative">
+                    <select
+                      value={formUniversity}
+                      onChange={(e) => {
+                        setFormUniversity(e.target.value);
+                        if (errors.university) setErrors((prev) => ({ ...prev, university: undefined }));
+                      }}
+                      className={`w-full bg-[#1A1A1A] border rounded-xl p-3 pr-10 text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-semibold appearance-none cursor-pointer ${
+                        errors.university ? 'border-red-500' : 'border-[#4A4A4A]'
+                      }`}
+                    >
+                      <option value="" disabled className="bg-[#1A1A1A] text-[#888888]">
+                        Select your university...
+                      </option>
+                      {GHANAIAN_UNIVERSITIES.map((uni) => (
+                        <option key={uni} value={uni} className="bg-[#1A1A1A] text-[#FFFFFF]">
+                          {uni}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888888]">
+                      <ChevronDown className="w-4 h-4 text-[#A0A0A0]" />
+                    </div>
+                  </div>
+
+                  {/* Custom University Text Input if 'Other' is selected */}
+                  {formUniversity === 'Other' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-2"
+                    >
+                      <input
+                        type="text"
+                        value={formCustomUniversity}
+                        onChange={(e) => {
+                          setFormCustomUniversity(e.target.value);
+                          if (errors.university) setErrors((prev) => ({ ...prev, university: undefined }));
+                        }}
+                        placeholder="Type your university name..."
+                        className={`w-full bg-[#1A1A1A] border rounded-xl p-3 text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-semibold ${
+                          errors.university ? 'border-red-500' : 'border-[#C9A84C]/50'
+                        }`}
+                      />
+                    </motion.div>
+                  )}
+                  {errors.university && (
+                    <p className="text-[11px] text-red-400 font-bold mt-1 flex items-center gap-1">
+                      <AlertCircle className="w-3.5 h-3.5" /> {errors.university}
+                    </p>
+                  )}
                 </div>
 
                 {/* Bio */}

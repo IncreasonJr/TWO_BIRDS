@@ -13,7 +13,11 @@ import {
   ArrowRight,
   ShieldCheck,
   RefreshCw,
+  Eye,
+  EyeOff,
+  ChevronDown,
 } from 'lucide-react';
+import { GHANAIAN_UNIVERSITIES } from '../data/universities';
 
 interface SignupProps {
   defaultMode?: 'signup' | 'login';
@@ -27,12 +31,15 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
   // Form states
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
-  const [university, setUniversity] = useState('Stanford University');
+  const [university, setUniversity] = useState<string>('University of Ghana (UG)');
+  const [customUniversity, setCustomUniversity] = useState<string>('');
   const [major, setMajor] = useState('');
   const [gender, setGender] = useState<'Male' | 'Female' | ''>('');
-  const [age, setAge] = useState<number>(20);
+  const [age, setAge] = useState<string>('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -57,12 +64,13 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
-      if (!university.trim()) {
-        setErrorMessage('Please enter your university name');
+      const finalUniversity = (university === 'Other' ? customUniversity : university).trim();
+      if (!finalUniversity) {
+        setErrorMessage(university === 'Other' ? 'Please specify your university' : 'Please select your university');
         return;
       }
 
-      if (university.trim().length > 100) {
+      if (finalUniversity.length > 100) {
         setErrorMessage('University name cannot exceed 100 characters');
         return;
       }
@@ -82,12 +90,18 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
         return;
       }
 
-      if (!age || Number(age) < 18) {
-        setErrorMessage('You must be at least 18 years of age to join Two Birds.');
+      if (!age.trim()) {
+        setErrorMessage('Please enter your age');
         return;
       }
 
-      if (Number(age) > 99) {
+      const parsedAge = parseInt(age, 10);
+      if (isNaN(parsedAge) || parsedAge < 18) {
+        setErrorMessage('You must be 18 or older to use Two Birds');
+        return;
+      }
+
+      if (parsedAge > 99) {
         setErrorMessage('Please enter a valid age under 100.');
         return;
       }
@@ -110,12 +124,12 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
       setSubmitting(true);
       const res = await signup(
         {
-          name,
-          email,
-          university,
-          major,
+          name: name.trim(),
+          email: email.trim(),
+          university: finalUniversity,
+          major: major.trim(),
           gender,
-          age: Number(age) || 20,
+          age: parsedAge,
         },
         password
       );
@@ -270,9 +284,9 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
             )}
           </div>
           <div className="relative">
-            <Lock className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Lock className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -280,9 +294,19 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
               }}
               placeholder="••••••••"
               minLength={6}
-              className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
+              className="w-full pl-10 pr-10 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 transition ${
+                showPassword ? 'text-[#C9A84C]' : 'text-[#4A4A4A] hover:text-[#C9A84C]'
+              }`}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
@@ -293,9 +317,9 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
               Confirm Password *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -303,31 +327,75 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
                 }}
                 placeholder="••••••••"
                 minLength={6}
-                className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
+                className="w-full pl-10 pr-10 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className={`absolute right-3.5 top-1/2 -translate-y-1/2 p-1 transition ${
+                  showConfirmPassword ? 'text-[#C9A84C]' : 'text-[#4A4A4A] hover:text-[#C9A84C]'
+                }`}
+                aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
         )}
 
         {mode === 'signup' && (
           <>
-            {/* University Name Field */}
+            {/* University Dropdown Field */}
             <div>
               <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
-                University Name *
+                University *
               </label>
               <div className="relative">
-                <School className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
+                <School className="w-4 h-4 text-[#C9A84C] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <select
                   value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                  placeholder="e.g. Stanford University"
-                  className="w-full pl-10 pr-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
+                  onChange={(e) => {
+                    setUniversity(e.target.value);
+                    if (errorMessage) setErrorMessage(null);
+                  }}
+                  className="w-full pl-10 pr-9 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-medium appearance-none cursor-pointer"
                   required
-                />
+                >
+                  <option value="" disabled className="bg-[#2A2A2A] text-[#888888]">
+                    Select your university...
+                  </option>
+                  {GHANAIAN_UNIVERSITIES.map((uni) => (
+                    <option key={uni} value={uni} className="bg-[#2A2A2A] text-[#FFFFFF]">
+                      {uni}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[#888888]">
+                  <ChevronDown className="w-4 h-4 text-[#A0A0A0]" />
+                </div>
               </div>
+
+              {/* Custom University Text Input if 'Other' is selected */}
+              {university === 'Other' && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-2"
+                >
+                  <input
+                    type="text"
+                    value={customUniversity}
+                    onChange={(e) => {
+                      setCustomUniversity(e.target.value);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    placeholder="Type your university name..."
+                    className="w-full px-3.5 py-2.5 bg-[#2A2A2A] border border-[#C9A84C]/50 rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium"
+                    required
+                  />
+                </motion.div>
+              )}
             </div>
 
             {/* Full Name */}
@@ -369,15 +437,23 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
 
               <div>
                 <label className="block text-xs font-bold text-[#FFFFFF] mb-1">
-                  Age
+                  Age *
                 </label>
                 <input
-                  type="number"
-                  min={18}
-                  max={99}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={age}
-                  onChange={(e) => setAge(Number(e.target.value))}
-                  className="w-full px-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] focus:outline-none focus:border-[#C9A84C] font-medium text-center"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === '' || /^\d+$/.test(val)) {
+                      setAge(val);
+                      if (errorMessage) setErrorMessage(null);
+                    }
+                  }}
+                  placeholder="e.g. 20"
+                  maxLength={3}
+                  className="w-full px-3 py-2.5 bg-[#333333] border border-[#4A4A4A] rounded-xl text-xs text-[#FFFFFF] placeholder-[#777777] focus:outline-none focus:border-[#C9A84C] font-medium text-center"
                   required
                 />
               </div>
