@@ -169,8 +169,45 @@ export async function sendPasswordReset(email: string): Promise<{ error: Error |
 }
 
 /**
+ * Update current user's password (used in password recovery or account settings).
+ */
+export async function updatePassword(newPassword: string): Promise<{ success: boolean; error: Error | null }> {
+  try {
+    const trimmed = newPassword.trim();
+    if (!trimmed || trimmed.length < 6) {
+      return { success: false, error: new Error('Password must be at least 6 characters long') };
+    }
+    if (trimmed.length > 72) {
+      return { success: false, error: new Error('Password cannot exceed 72 characters') };
+    }
+
+    const { error } = await supabase.auth.updateUser({
+      password: trimmed,
+    });
+
+    if (error) {
+      if (error.message.toLowerCase().includes('same as') || error.message.toLowerCase().includes('different from')) {
+        return { success: false, error: new Error('New password must be different from your current password.') };
+      }
+      if (error.message.toLowerCase().includes('rate limit')) {
+        return { success: false, error: new Error('Too many password update attempts. Please wait a moment and try again.') };
+      }
+      return { success: false, error };
+    }
+
+    return { success: true, error: null };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err instanceof Error ? err : new Error(String(err)),
+    };
+  }
+}
+
+/**
  * Resend verification email (deprecated - accounts are auto-confirmed at signup).
  */
 export async function resendVerificationEmail(_email: string): Promise<{ error: Error | null }> {
   return { error: null };
 }
+
