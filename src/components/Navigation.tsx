@@ -56,7 +56,7 @@ export const TopNavbar: React.FC = () => {
   if (isInstalled) {
     // Show Logo + Two Birds title centered with Notifications bell on right
     return (
-      <header className="sticky top-0 z-40 bg-[#1A1A1A] text-[#FFFFFF] px-4 py-2.5 flex items-center justify-between shadow-md border-b border-[#4A4A4A]">
+      <header className="sticky top-0 z-40 bg-[#1A1A1A]/95 backdrop-blur-md text-[#FFFFFF] px-4 py-2.5 flex items-center justify-between shadow-md border-b border-[#4A4A4A]">
         <div className="w-8" />
         <div className="flex items-center gap-2.5">
           <img
@@ -77,7 +77,7 @@ export const TopNavbar: React.FC = () => {
 
   // Website mode (not installed yet): Show Logo + Two Birds on left, Bell + Install button on right
   return (
-    <header className="sticky top-0 z-40 bg-[#1A1A1A] text-[#FFFFFF] px-4 py-2.5 flex items-center justify-between shadow-md border-b border-[#4A4A4A]">
+    <header className="sticky top-0 z-40 bg-[#1A1A1A]/95 backdrop-blur-md text-[#FFFFFF] px-4 py-2.5 flex items-center justify-between shadow-md border-b border-[#4A4A4A]">
       <div className="flex items-center gap-2.5">
         <img
           src="/logo192.png"

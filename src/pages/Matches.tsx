@@ -34,7 +34,7 @@ export const Matches: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full flex-1 pb-20 max-w-md mx-auto px-4 py-3 space-y-4 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF]">
+    <div className="flex flex-col h-full flex-1 pb-20 max-w-md mx-auto px-4 py-3 space-y-4 overflow-y-auto bg-transparent text-[#FFFFFF]">
       {/* Search Bar */}
       <div className="relative">
         <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#C9A84C]" />

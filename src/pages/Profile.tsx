@@ -377,7 +377,7 @@ export const Profile: React.FC = () => {
   const mainPhoto = currentUser.photos && currentUser.photos.length > 0 ? currentUser.photos[0] : null;
 
   return (
-    <div className="flex flex-col h-full flex-1 pb-10 max-w-md mx-auto px-4 py-3 space-y-3.5 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF] select-none">
+    <div className="flex flex-col h-full flex-1 pb-10 max-w-md mx-auto px-4 py-3 space-y-3.5 overflow-y-auto bg-transparent text-[#FFFFFF] select-none">
       {/* Toast Notification */}
       <AnimatePresence>
         {showToast && (

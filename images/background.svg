@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <defs>
+    <!-- 4-Point Star Definition -->
+    <g id="sparkle-lg">
+      <path d="M 0,-18 C 0,-4 4,0 18,0 C 4,0 0,4 0,18 C 0,4 -4,0 -18,0 C -4,0 0,-4 0,-18 Z" fill="#D4AF37" fill-opacity="0.45" />
+      <circle cx="0" cy="0" r="2" fill="#FFF2B2" fill-opacity="0.6" />
+    </g>
+
+    <g id="sparkle-sm">
+      <path d="M 0,-10 C 0,-2 2,0 10,0 C 2,0 0,2 0,10 C 0,2 -2,0 -10,0 C -2,0 0,-2 0,-10 Z" fill="#D4AF37" fill-opacity="0.4" />
+    </g>
+
+    <!-- Diamond Flourish Definition -->
+    <g id="diamond-node">
+      <polygon points="0,-5 4,0 0,5 -4,0" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.4" />
+      <circle cx="0" cy="0" r="1.5" fill="#D4AF37" fill-opacity="0.48" />
+    </g>
+
+    <!-- Micro Bird Pair in Flight -->
+    <g id="micro-birds">
+      <path d="M -12,-4 Q -7,-10 -2,-7 Q 3,-10 8,-4 Q 3,-6 -2,-5 Q -7,-6 -12,-4 Z" fill="#D4AF37" fill-opacity="0.4" />
+      <path d="M 4,6 Q 8,1 12,3 Q 16,1 20,6 Q 16,4 12,5 Q 8,4 4,6 Z" fill="#D4AF37" fill-opacity="0.36" />
+    </g>
+
+    <!-- Primary Abstract Minimal Two-Birds Motif -->
+    <g id="avian-emblem">
+      <!-- Outer Celestial Concentric & Dashed Rings -->
+      <circle cx="0" cy="0" r="160" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.28" stroke-dasharray="3 9" />
+      <circle cx="0" cy="0" r="135" fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.32" />
+      <circle cx="0" cy="0" r="105" fill="none" stroke="#D4AF37" stroke-width="1" stroke-opacity="0.28" />
+      <circle cx="0" cy="0" r="75" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.25" stroke-dasharray="1 6" />
+
+      <!-- Minimal Axis Accents -->
+      <line x1="0" y1="-170" x2="0" y2="-145" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.36" />
+      <line x1="0" y1="145" x2="0" y2="170" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.36" />
+      <line x1="-170" y1="0" x2="-145" y2="0" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.36" />
+      <line x1="145" y1="0" x2="170" y2="0" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.36" />
+
+      <circle cx="0" cy="-140" r="2.5" fill="#D4AF37" fill-opacity="0.45" />
+      <circle cx="0" cy="140" r="2.5" fill="#D4AF37" fill-opacity="0.45" />
+      <circle cx="-140" cy="0" r="2.5" fill="#D4AF37" fill-opacity="0.45" />
+      <circle cx="140" cy="0" r="2.5" fill="#D4AF37" fill-opacity="0.45" />
+
+      <!-- Abstract Two Birds: Continuous Harmonious Line Art -->
+      <!-- Left Bird -->
+      <path d="M -3,-28 C -7,-33 -15,-35 -22,-28 C -27,-22 -24,-13 -16,-4 C -6,7 -2,22 -2,38 C -2,56 -16,70 -34,70 C -48,70 -60,58 -60,42 C -60,20 -38,-6 -6,-28" 
+            fill="none" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.48" />
+      <!-- Left Bird Wings & Plumage Sweep -->
+      <path d="M -12,2 C -28,-10 -52,-18 -82,-16 C -62,-2 -42,8 -20,15" 
+            fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.4" />
+      <path d="M -20,-24 C -34,-44 -56,-58 -82,-66 C -68,-46 -50,-32 -26,-18" 
+            fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.36" />
+      <circle cx="-17" cy="-26" r="1.5" fill="#D4AF37" fill-opacity="0.5" />
+
+      <!-- Right Bird (Mirrored for Soulful Alignment & Connection) -->
+      <path d="M 3,-28 C 7,-33 15,-35 22,-28 C 27,-22 24,-13 16,-4 C 6,7 2,22 2,38 C 2,56 16,70 34,70 C 48,70 60,58 60,42 C 60,20 38,-6 6,-28" 
+            fill="none" stroke="#D4AF37" stroke-width="1.8" stroke-linecap="round" stroke-opacity="0.48" />
+      <!-- Right Bird Wings & Plumage Sweep -->
+      <path d="M 12,2 C 28,-10 52,-18 82,-16 C 62,-2 42,8 20,15" 
+            fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.4" />
+      <path d="M 20,-24 C 34,-44 56,-58 82,-66 C 68,-46 50,-32 26,-18" 
+            fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.36" />
+      <circle cx="17" cy="-26" r="1.5" fill="#D4AF37" fill-opacity="0.5" />
+
+      <!-- Central Sacred Sparks of Union -->
+      <use href="#sparkle-lg" x="0" y="-38" />
+      <circle cx="0" cy="70" r="2" fill="#D4AF37" fill-opacity="0.4" />
+      <path d="M -8,82 C -4,86 4,86 8,82" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.36" />
+    </g>
+
+    <!-- Seamless Secondary Corner Motif -->
+    <g id="corner-flourish">
+      <circle cx="0" cy="0" r="70" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.28" />
+      <circle cx="0" cy="0" r="50" fill="none" stroke="#D4AF37" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="2 4" />
+      <!-- Stylized Interlaced Arc Wings -->
+      <path d="M -45,-15 Q -15,-45 0,-45 Q 15,-45 45,-15 Q 15,-25 0,-25 Q -15,-25 -45,-15 Z" fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.4" />
+      <path d="M -45,15 Q -15,45 0,45 Q 15,45 45,15 Q 15,25 0,25 Q -15,25 -45,15 Z" fill="none" stroke="#D4AF37" stroke-width="1.4" stroke-opacity="0.4" />
+      <use href="#sparkle-lg" x="0" y="0" />
+      <use href="#diamond-node" x="0" y="-70" />
+      <use href="#diamond-node" x="0" y="70" />
+      <use href="#diamond-node" x="-70" y="0" />
+      <use href="#diamond-node" x="70" y="0" />
+    </g>
+
+    <!-- 540x540 Repeat Tile (2x2 on 1080 Canvas) -->
+    <pattern id="chat-tile" width="540" height="540" patternUnits="userSpaceOnUse">
+      <!-- Background Ambient Connecting Geometry -->
+      <g stroke="#D4AF37" fill="none" stroke-opacity="0.2" stroke-width="0.8">
+        <!-- Connecting Curvature Lines Linking Motifs -->
+        <path d="M 0,135 Q 135,135 135,0" />
+        <path d="M 540,135 Q 405,135 405,0" />
+        <path d="M 0,405 Q 135,405 135,540" />
+        <path d="M 540,405 Q 405,405 405,540" />
+        
+        <!-- Subtle Octagonal Boundary Framework -->
+        <path d="M 270,40 L 405,135 L 500,270 L 405,405 L 270,500 L 135,405 L 40,270 L 135,135 Z" stroke-dasharray="2 10" stroke-opacity="0.16" />
+      </g>
+
+      <!-- Center Master Motif -->
+      <use href="#avian-emblem" x="270" y="270" />
+
+      <!-- Seamless Corners (Equates to One Motif at Tile Intersection) -->
+      <use href="#corner-flourish" x="0" y="0" />
+      <use href="#corner-flourish" x="540" y="0" />
+      <use href="#corner-flourish" x="0" y="540" />
+      <use href="#corner-flourish" x="540" y="540" />
+
+      <!-- Mid-Border Harmonizers (Wrap Horizontally & Vertically) -->
+      <!-- Top / Bottom Midpoints -->
+      <g transform="translate(270, 0)">
+        <use href="#diamond-node" x="0" y="0" />
+        <path d="M -30,0 C -15,10 15,10 30,0" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.32" />
+        <circle cx="0" cy="18" r="1.5" fill="#D4AF37" fill-opacity="0.4" />
+      </g>
+      <g transform="translate(270, 540)">
+        <use href="#diamond-node" x="0" y="0" />
+        <path d="M -30,0 C -15,-10 15,-10 30,0" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.32" />
+        <circle cx="0" cy="-18" r="1.5" fill="#D4AF37" fill-opacity="0.4" />
+      </g>
+
+      <!-- Left / Right Midpoints -->
+      <g transform="translate(0, 270)">
+        <use href="#diamond-node" x="0" y="0" />
+        <path d="M 0,-30 C 10,-15 10,15 0,30" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.32" />
+        <circle cx="18" cy="0" r="1.5" fill="#D4AF37" fill-opacity="0.4" />
+      </g>
+      <g transform="translate(540, 270)">
+        <use href="#diamond-node" x="0" y="0" />
+        <path d="M 0,-30 C -10,-15 -10,15 0,30" fill="none" stroke="#D4AF37" stroke-width="1.2" stroke-opacity="0.32" />
+        <circle cx="-18" cy="0" r="1.5" fill="#D4AF37" fill-opacity="0.4" />
+      </g>
+
+      <!-- Intermediate Diagonal Quadrants: Floating Micro Birds & Sparkles -->
+      <!-- Quadrant 1: Top-Left -->
+      <use href="#micro-birds" x="135" y="135" />
+      <use href="#sparkle-sm" x="135" y="112" />
+      <circle cx="115" cy="148" r="1.5" fill="#D4AF37" fill-opacity="0.36" />
+      <circle cx="155" cy="122" r="1.2" fill="#D4AF37" fill-opacity="0.36" />
+
+      <!-- Quadrant 2: Top-Right -->
+      <use href="#micro-birds" x="405" y="135" transform="translate(810, 0) scale(-1, 1)" />
+      <use href="#sparkle-sm" x="405" y="112" />
+      <circle cx="395" cy="122" r="1.2" fill="#D4AF37" fill-opacity="0.36" />
+      <circle cx="425" cy="148" r="1.5" fill="#D4AF37" fill-opacity="0.36" />
+
+      <!-- Quadrant 3: Bottom-Left -->
+      <use href="#micro-birds" x="135" y="405" />
+      <use href="#sparkle-sm" x="135" y="428" />
+      <circle cx="115" cy="392" r="1.5" fill="#D4AF37" fill-opacity="0.36" />
+      <circle cx="155" cy="418" r="1.2" fill="#D4AF37" fill-opacity="0.36" />
+
+      <!-- Quadrant 4: Bottom-Right -->
+      <use href="#micro-birds" x="405" y="405" transform="translate(810, 0) scale(-1, 1)" />
+      <use href="#sparkle-sm" x="405" y="428" />
+      <circle cx="395" cy="418" r="1.2" fill="#D4AF37" fill-opacity="0.36" />
+      <circle cx="425" cy="392" r="1.5" fill="#D4AF37" fill-opacity="0.36" />
+
+      <!-- Tiny Ambient Stardust Dots -->
+      <circle cx="270" cy="90" r="1.6" fill="#D4AF37" fill-opacity="0.32" />
+      <circle cx="270" cy="450" r="1.6" fill="#D4AF37" fill-opacity="0.32" />
+      <circle cx="90" cy="270" r="1.6" fill="#D4AF37" fill-opacity="0.32" />
+      <circle cx="450" cy="270" r="1.6" fill="#D4AF37" fill-opacity="0.32" />
+
+      <circle cx="210" cy="210" r="1.2" fill="#D4AF37" fill-opacity="0.28" />
+      <circle cx="330" cy="210" r="1.2" fill="#D4AF37" fill-opacity="0.28" />
+      <circle cx="210" cy="330" r="1.2" fill="#D4AF37" fill-opacity="0.28" />
+      <circle cx="330" cy="330" r="1.2" fill="#D4AF37" fill-opacity="0.28" />
+    </pattern>
+  </defs>
+
+  <!-- Deep Obsidian/Charcoal Solid Background -->
+  <rect width="1080" height="1080" fill="#1A1A1A" />
+
+  <!-- Seamless Tiled Luxury Pattern Overlay -->
+  <rect width="1080" height="1080" fill="url(#chat-tile)" />
+</svg>

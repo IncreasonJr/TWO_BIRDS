@@ -17,7 +17,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({ unreadMatchesCount = 0 }) 
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto w-full bg-[#1A1A1A] border-t border-[#4A4A4A] px-4 sm:px-6 py-2 shadow-2xl overflow-hidden select-none touch-none">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto w-full bg-[#1A1A1A]/95 backdrop-blur-md border-t border-[#4A4A4A] px-4 sm:px-6 py-2 shadow-2xl overflow-hidden select-none touch-none">
       <div className="flex items-center justify-between w-full max-w-md mx-auto">
         {navItems.map((item) => {
           const IconComponent = item.icon;

@@ -165,7 +165,7 @@ export const Notifications: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#1A1A1A] text-[#FFFFFF] overflow-hidden select-none">
+    <div className="flex-1 flex flex-col h-full bg-transparent text-[#FFFFFF] overflow-hidden select-none">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-[#1A1A1A]/95 backdrop-blur-md px-4 py-3 border-b border-[#4A4A4A] flex items-center justify-between">
         <div className="flex items-center gap-2.5">

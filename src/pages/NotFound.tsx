@@ -6,7 +6,7 @@ export const NotFound: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 text-center bg-[#1A1A1A] text-[#FFFFFF] space-y-5">
+    <div className="flex flex-col items-center justify-center h-full px-6 text-center bg-transparent text-[#FFFFFF] space-y-5">
       <div className="w-20 h-20 rounded-full bg-[#333333] border border-[#C9A84C]/40 text-[#C9A84C] flex items-center justify-center shadow-glow-gold">
         <Sparkles className="w-10 h-10 text-[#C9A84C]" />
       </div>

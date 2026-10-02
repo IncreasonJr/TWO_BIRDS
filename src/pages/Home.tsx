@@ -69,7 +69,7 @@ export const Home: React.FC = () => {
   }, [newMatch, dismissMatchModal]);
 
   return (
-    <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-[#1A1A1A]">
+    <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-transparent">
       {/* Free User Upsell Banner */}
       {!isPremium && !isBannerDismissed && (
         <div className="mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-[#2A2A2A] via-[#333333] to-[#2A2A2A] border border-[#C9A84C]/40 flex items-center justify-between gap-2 shadow-md shrink-0">

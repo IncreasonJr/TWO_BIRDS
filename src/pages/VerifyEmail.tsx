@@ -17,7 +17,7 @@ export const VerifyEmail: React.FC = () => {
   }, [isAuthenticated, userLoading, currentUser?.photos, navigate]);
 
   return (
-    <div className="h-full flex flex-col bg-[#1A1A1A] text-[#FFFFFF] overflow-y-auto px-5 py-8 justify-center max-w-md mx-auto w-full">
+    <div className="h-full flex flex-col bg-transparent text-[#FFFFFF] overflow-y-auto px-5 py-8 justify-center max-w-md mx-auto w-full">
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}

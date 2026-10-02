@@ -42,7 +42,7 @@ export const Premium: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full flex-1 max-w-md mx-auto w-full bg-[#1A1A1A] text-[#FFFFFF] overflow-hidden select-none">
+    <div className="flex flex-col h-full flex-1 max-w-md mx-auto w-full bg-transparent text-[#FFFFFF] overflow-hidden select-none">
       {/* Top Navigation Bar */}
       <header className="shrink-0 z-30 bg-[#1A1A1A]/95 backdrop-blur-md px-4 py-3 border-b border-[#333333] flex items-center justify-between">
         <button

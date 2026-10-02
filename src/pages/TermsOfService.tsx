@@ -6,7 +6,7 @@ export const TermsOfService: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="h-full flex flex-col bg-[#1A1A1A] text-[#FFFFFF] overflow-hidden">
+    <div className="h-full flex flex-col bg-transparent text-[#FFFFFF] overflow-hidden">
       {/* Top Header Bar */}
       <header className="sticky top-0 z-40 bg-[#1A1A1A]/95 backdrop-blur-md px-4 py-3 border-b border-[#4A4A4A] flex items-center justify-between flex-shrink-0">
         <button

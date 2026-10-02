@@ -141,7 +141,7 @@ export const Chat: React.FC = () => {
 
   if (!activeMatch) {
     return (
-      <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center space-y-3 bg-[#1A1A1A] text-[#FFFFFF]">
+      <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center space-y-3 bg-transparent text-[#FFFFFF]">
         <div className="w-14 h-14 rounded-full bg-[#333333] border border-[#4A4A4A] flex items-center justify-center text-[#C9A84C]">
           <MessageSquare className="w-6 h-6" />
         </div>
@@ -185,9 +185,9 @@ export const Chat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full flex-1 max-w-md mx-auto relative overflow-hidden bg-[#1A1A1A] text-[#FFFFFF] select-none">
+    <div className="flex flex-col h-full flex-1 max-w-md mx-auto relative overflow-hidden bg-transparent text-[#FFFFFF] select-none">
       {/* Match Header (Top) */}
-      <div className="bg-[#1A1A1A] border-b border-[#4A4A4A] px-4 py-2.5 flex items-center justify-between flex-shrink-0 z-30 shadow-md">
+      <div className="bg-[#1A1A1A]/95 backdrop-blur-md border-b border-[#4A4A4A] px-4 py-2.5 flex items-center justify-between flex-shrink-0 z-30 shadow-md">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/matches')}
@@ -297,7 +297,7 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* Message Feed Area (Scrollable Only Here) */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3.5">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-4 space-y-3.5 bg-[#1A1A1A]/40 backdrop-blur-[1px]">
         {/* Match Header Card Watermark */}
         <div
           onClick={() => setIsProfileOpen(true)}
@@ -385,7 +385,7 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* Icebreaker Suggestions (Sticky Bottom) */}
-      <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#4A4A4A] bg-[#1A1A1A] flex-shrink-0">
+      <div className="px-4 py-2 flex gap-2 overflow-x-auto no-scrollbar border-t border-[#4A4A4A] bg-[#1A1A1A]/95 backdrop-blur-md flex-shrink-0">
         {ICEBREAKERS.map((item, index) => {
           const IconComp = item.icon;
           return (
@@ -402,7 +402,7 @@ export const Chat: React.FC = () => {
       </div>
 
       {/* ENHANCED CHAT INPUT COMPONENT (Fixed Sticky at Bottom) */}
-      <div className="px-3 pt-1.5 pb-[15px] bg-[#1A1A1A] z-30 shadow-lg flex-shrink-0">
+      <div className="px-3 pt-1.5 pb-[15px] bg-[#1A1A1A]/95 backdrop-blur-md z-30 shadow-lg flex-shrink-0">
         <ChatInput
           onSendMessage={handleSendMessage}
           onSendVoiceNote={handleSendVoiceNote}

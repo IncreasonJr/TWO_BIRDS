@@ -95,7 +95,7 @@ export const AddPhotos: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full flex-1 max-w-md mx-auto px-4 py-5 overflow-y-auto bg-[#1A1A1A] text-[#FFFFFF] select-none justify-between space-y-4">
+    <div className="flex flex-col h-full flex-1 max-w-md mx-auto px-4 py-5 overflow-y-auto bg-transparent text-[#FFFFFF] select-none justify-between space-y-4">
       {/* Toast Notification */}
       <AnimatePresence>
         {showToast && (

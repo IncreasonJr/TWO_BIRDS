@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <defs>
+    <style>
+      .bg { fill: #1A1A1A; }
+      .g-stroke-subtle { stroke: #C9A84C; stroke-opacity: 0.18; fill: none; }
+      .g-stroke-mid { stroke: #C9A84C; stroke-opacity: 0.25; fill: none; }
+      .g-stroke-light { stroke: #DFCA7A; stroke-opacity: 0.20; fill: none; }
+      .g-fill-faint { fill: #C9A84C; fill-opacity: 0.08; }
+      .g-fill-subtle { fill: #C9A84C; fill-opacity: 0.16; }
+      .g-fill-mid { fill: #C9A84C; fill-opacity: 0.22; }
+      .g-fill-solid { fill: #C9A84C; fill-opacity: 0.28; }
+    </style>
+
+    <!-- Detailed High-Density Repeating Tile (135x135 creates an 8x8 dense grid across 1080x1080) -->
+    <pattern id="luxuryDensePattern" width="135" height="135" patternUnits="userSpaceOnUse">
+      <!-- Background Diamond Grid Lattices -->
+      <path d="M 0 67.5 L 67.5 0 L 135 67.5 L 67.5 135 Z" class="g-stroke-subtle" stroke-width="0.75"/>
+      <path d="M 0 0 L 135 135 M 135 0 L 0 135" class="g-stroke-subtle" stroke-width="0.5" stroke-dasharray="1.5 2.5"/>
+      
+      <!-- Concentric Delicate Arcs & Circles -->
+      <circle cx="67.5" cy="67.5" r="45" class="g-stroke-subtle" stroke-width="0.5"/>
+      <circle cx="67.5" cy="67.5" r="28" class="g-stroke-mid" stroke-width="0.5" stroke-dasharray="2 2"/>
+      <circle cx="67.5" cy="67.5" r="10" class="g-stroke-subtle" stroke-width="0.5"/>
+      
+      <!-- Corner Concentric Details (Split evenly across 4 corners for seamless tiling) -->
+      <!-- Top-Left (0,0) -->
+      <path d="M 0 32 A 32 32 0 0 1 32 0" class="g-stroke-subtle" stroke-width="0.5"/>
+      <path d="M 0 20 A 20 20 0 0 1 20 0" class="g-stroke-mid" stroke-width="0.6"/>
+      <path d="M 0 8 A 8 8 0 0 1 8 0" class="g-stroke-subtle" stroke-width="0.5"/>
+      <!-- Top-Right (135,0) -->
+      <path d="M 135 32 A 32 32 0 0 0 103 0" class="g-stroke-subtle" stroke-width="0.5"/>
+      <path d="M 135 20 A 20 20 0 0 0 115 0" class="g-stroke-mid" stroke-width="0.6"/>
+      <path d="M 135 8 A 8 8 0 0 0 127 0" class="g-stroke-subtle" stroke-width="0.5"/>
+      <!-- Bottom-Left (0,135) -->
+      <path d="M 0 103 A 32 32 0 0 0 32 135" class="g-stroke-subtle" stroke-width="0.5"/>
+      <path d="M 0 115 A 20 20 0 0 0 20 135" class="g-stroke-mid" stroke-width="0.6"/>
+      <path d="M 0 127 A 8 8 0 0 0 8 135" class="g-stroke-subtle" stroke-width="0.5"/>
+      <!-- Bottom-Right (135,135) -->
+      <path d="M 135 103 A 32 32 0 0 1 103 135" class="g-stroke-subtle" stroke-width="0.5"/>
+      <path d="M 135 115 A 20 20 0 0 1 115 135" class="g-stroke-mid" stroke-width="0.6"/>
+      <path d="M 135 127 A 8 8 0 0 1 127 135" class="g-stroke-subtle" stroke-width="0.5"/>
+
+      <!-- Center Elegant Crane Motif (Flying upward-right) -->
+      <g id="mini-crane-center">
+        <!-- Body & Tail -->
+        <polygon points="67.5,61 69.5,67.5 67.5,76 66,67.5" class="g-fill-mid"/>
+        <path d="M 67.5 61 L 70.5 53 L 73 50.5 M 70.5 53 L 69 51" class="g-stroke-mid" stroke-width="0.75" stroke-linecap="round"/>
+        <!-- Tail feathers -->
+        <line x1="67.5" y1="76" x2="65" y2="82" class="g-stroke-mid" stroke-width="0.6"/>
+        <line x1="67.5" y1="76" x2="67.5" y2="84" class="g-stroke-mid" stroke-width="0.6"/>
+        <line x1="67.5" y1="76" x2="70" y2="82" class="g-stroke-mid" stroke-width="0.6"/>
+        <!-- Right / Upper Wing -->
+        <path d="M 69 64 L 88 50 L 83 62 L 77 65 L 69 66 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.6" stroke-linejoin="round"/>
+        <line x1="74" y1="60" x2="84" y2="53" class="g-stroke-subtle" stroke-width="0.5"/>
+        <line x1="72" y1="63" x2="79" y2="58" class="g-stroke-subtle" stroke-width="0.5"/>
+        <!-- Left / Lower Wing -->
+        <path d="M 66 65 L 49 57 L 57 66 L 63 68 L 66 67 Z" class="g-fill-faint g-stroke-mid" stroke-width="0.6" stroke-linejoin="round"/>
+        <line x1="61" y1="64" x2="53" y2="60" class="g-stroke-subtle" stroke-width="0.5"/>
+      </g>
+
+      <!-- Corner Mini Swallows / Cranes (Seamless across 4 tile corners) -->
+      <!-- Corner Top-Left (0,0) -->
+      <g transform="translate(0, 0)">
+        <polygon points="0,7 6,10 0,16 -6,10" class="g-fill-mid"/>
+        <path d="M 0,7 L 14,-3 L 8,6 L 2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <path d="M 0,7 L -14,-3 L -8,6 L -2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <line x1="0" y1="16" x2="0" y2="22" class="g-stroke-mid" stroke-width="0.6"/>
+      </g>
+      <!-- Corner Top-Right (135,0) -->
+      <g transform="translate(135, 0)">
+        <polygon points="0,7 6,10 0,16 -6,10" class="g-fill-mid"/>
+        <path d="M 0,7 L 14,-3 L 8,6 L 2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <path d="M 0,7 L -14,-3 L -8,6 L -2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <line x1="0" y1="16" x2="0" y2="22" class="g-stroke-mid" stroke-width="0.6"/>
+      </g>
+      <!-- Corner Bottom-Left (0,135) -->
+      <g transform="translate(0, 135)">
+        <polygon points="0,7 6,10 0,16 -6,10" class="g-fill-mid"/>
+        <path d="M 0,7 L 14,-3 L 8,6 L 2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <path d="M 0,7 L -14,-3 L -8,6 L -2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <line x1="0" y1="16" x2="0" y2="22" class="g-stroke-mid" stroke-width="0.6"/>
+      </g>
+      <!-- Corner Bottom-Right (135,135) -->
+      <g transform="translate(135, 135)">
+        <polygon points="0,7 6,10 0,16 -6,10" class="g-fill-mid"/>
+        <path d="M 0,7 L 14,-3 L 8,6 L 2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <path d="M 0,7 L -14,-3 L -8,6 L -2,8 Z" class="g-fill-subtle g-stroke-mid" stroke-width="0.5"/>
+        <line x1="0" y1="16" x2="0" y2="22" class="g-stroke-mid" stroke-width="0.6"/>
+      </g>
+
+      <!-- Mid-Edge Art Deco Fan / Star Nodes (Connecting seamlessly) -->
+      <!-- Top Edge & Bottom Edge (x=67.5, y=0 and y=135) -->
+      <g transform="translate(67.5, 0)">
+        <path d="M -12 0 Q 0 10 12 0 Q 0 -10 -12 0 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="2" class="g-fill-solid"/>
+        <path d="M 0 0 L -8 12 M 0 0 L 0 14 M 0 0 L 8 12" class="g-stroke-subtle" stroke-width="0.5"/>
+      </g>
+      <g transform="translate(67.5, 135)">
+        <path d="M -12 0 Q 0 10 12 0 Q 0 -10 -12 0 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="2" class="g-fill-solid"/>
+        <path d="M 0 0 L -8 -12 M 0 0 L 0 -14 M 0 0 L 8 -12" class="g-stroke-subtle" stroke-width="0.5"/>
+      </g>
+
+      <!-- Left Edge & Right Edge (y=67.5, x=0 and x=135) -->
+      <g transform="translate(0, 67.5)">
+        <path d="M 0 -12 Q 10 0 0 12 Q -10 0 0 -12 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="2" class="g-fill-solid"/>
+        <path d="M 0 0 L 12 -8 M 0 0 L 14 0 M 0 0 L 12 8" class="g-stroke-subtle" stroke-width="0.5"/>
+      </g>
+      <g transform="translate(135, 67.5)">
+        <path d="M 0 -12 Q 10 0 0 12 Q -10 0 0 -12 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="2" class="g-fill-solid"/>
+        <path d="M 0 0 L -12 -8 M 0 0 L -14 0 M 0 0 L -12 8" class="g-stroke-subtle" stroke-width="0.5"/>
+      </g>
+
+      <!-- Fine Delicate Celestial Stars & Micro Diamonds in Quadrants -->
+      <!-- Quadrant 1 (Top-Left) -->
+      <g transform="translate(33.75, 33.75)">
+        <path d="M 0 -6 L 1.5 -1.5 L 6 0 L 1.5 1.5 L 0 6 L -1.5 1.5 L -6 0 L -1.5 -1.5 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="0.8" class="g-fill-solid"/>
+      </g>
+      <!-- Quadrant 2 (Top-Right) -->
+      <g transform="translate(101.25, 33.75)">
+        <path d="M 0 -6 L 1.5 -1.5 L 6 0 L 1.5 1.5 L 0 6 L -1.5 1.5 L -6 0 L -1.5 -1.5 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="0.8" class="g-fill-solid"/>
+      </g>
+      <!-- Quadrant 3 (Bottom-Left) -->
+      <g transform="translate(33.75, 101.25)">
+        <path d="M 0 -6 L 1.5 -1.5 L 6 0 L 1.5 1.5 L 0 6 L -1.5 1.5 L -6 0 L -1.5 -1.5 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="0.8" class="g-fill-solid"/>
+      </g>
+      <!-- Quadrant 4 (Bottom-Right) -->
+      <g transform="translate(101.25, 101.25)">
+        <path d="M 0 -6 L 1.5 -1.5 L 6 0 L 1.5 1.5 L 0 6 L -1.5 1.5 L -6 0 L -1.5 -1.5 Z" class="g-fill-mid"/>
+        <circle cx="0" cy="0" r="0.8" class="g-fill-solid"/>
+      </g>
+
+      <!-- Tiny Gold Sparkle Accents -->
+      <circle cx="67.5" cy="22" r="1" class="g-fill-solid"/>
+      <circle cx="67.5" cy="113" r="1" class="g-fill-solid"/>
+      <circle cx="22" cy="67.5" r="1" class="g-fill-solid"/>
+      <circle cx="113" cy="67.5" r="1" class="g-fill-solid"/>
+      
+      <circle cx="33.75" cy="67.5" r="0.75" class="g-fill-mid"/>
+      <circle cx="101.25" cy="67.5" r="0.75" class="g-fill-mid"/>
+      <circle cx="67.5" cy="33.75" r="0.75" class="g-fill-mid"/>
+      <circle cx="67.5" cy="101.25" r="0.75" class="g-fill-mid"/>
+    </pattern>
+
+    <!-- Subtle Vignette & Depth Gradients -->
+    <radialGradient id="vignette" cx="50%" cy="50%" r="70%">
+      <stop offset="40%" stop-color="#C9A84C" stop-opacity="0.04"/>
+      <stop offset="80%" stop-color="#000000" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.6"/>
+    </radialGradient>
+    
+    <linearGradient id="softSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DFCA7A" stop-opacity="0.06"/>
+      <stop offset="50%" stop-color="#C9A84C" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#A68434" stop-opacity="0.05"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Solid Luxury Dark Background -->
+  <rect width="1080" height="1080" class="bg"/>
+
+  <!-- High-Density Seamless Pattern Fill -->
+  <rect width="1080" height="1080" fill="url(#luxuryDensePattern)"/>
+
+  <!-- Subtle Lighting Overlays for Depth and Elegance -->
+  <rect width="1080" height="1080" fill="url(#softSheen)" pointer-events="none"/>
+  <rect width="1080" height="1080" fill="url(#vignette)" pointer-events="none"/>
+
+  <!-- Minimal Fine Perimeter Border Inset -->
+  <rect x="24" y="24" width="1032" height="1032" class="g-stroke-subtle" stroke-width="0.75" pointer-events="none"/>
+  <rect x="28" y="28" width="1024" height="1024" class="g-stroke-subtle" stroke-width="0.5" stroke-dasharray="3 3" pointer-events="none"/>
+</svg>

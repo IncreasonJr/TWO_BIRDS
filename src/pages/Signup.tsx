@@ -172,7 +172,7 @@ export const Signup: React.FC<SignupProps> = ({ defaultMode = 'signup' }) => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#1A1A1A] text-[#FFFFFF] overflow-y-auto px-5 py-6">
+    <div className="h-full flex flex-col bg-transparent text-[#FFFFFF] overflow-y-auto px-5 py-6">
       {/* Brand Header */}
       <div className="text-center space-y-2 mb-6">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#333333] border border-[#4A4A4A] shadow-glow-gold mb-1 overflow-hidden p-1.5">

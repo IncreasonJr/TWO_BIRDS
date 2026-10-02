@@ -45,7 +45,7 @@ export const CommunityGuidelines: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-[#FFFFFF] flex flex-col max-w-md mx-auto relative pb-12">
+    <div className="h-full bg-transparent text-[#FFFFFF] flex flex-col max-w-md mx-auto relative pb-12 overflow-y-auto">
       {/* Header */}
       <div className="sticky top-0 z-30 bg-[#1A1A1A]/90 backdrop-blur-md border-b border-[#333333] px-4 py-3 flex items-center justify-between">
         <button

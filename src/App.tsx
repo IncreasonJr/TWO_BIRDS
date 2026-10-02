@@ -121,14 +121,27 @@ const AppContent: React.FC = () => {
   const showNav = !isPublicRoute && !isDedicatedScreen && isAuthenticated;
 
   return (
-    <div className="h-screen h-[100dvh] w-full bg-[#1A1A1A] text-[#FFFFFF] flex flex-col overflow-hidden select-none">
+    <div className="h-screen h-[100dvh] w-full bg-[#121212] text-[#FFFFFF] flex flex-col overflow-hidden select-none">
       {/* Mobile Container Shell */}
       <div className={`w-full max-w-md mx-auto h-full flex flex-col bg-[#1A1A1A] border-x border-[#4A4A4A] shadow-2xl relative overflow-hidden ${showNav ? 'pb-14' : ''}`}>
+        {/* Global Luxury SVG Background & Dark Overlay */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('/images/background.svg')",
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none z-0 bg-gradient-to-b from-[#1A1A1A]/20 via-[#1A1A1A]/35 to-[#1A1A1A]/45"
+          aria-hidden="true"
+        />
+
         <UpdateNotification />
         <InstallPWA variant="banner" />
         <NotificationPermissionPrompt />
         {showNav && <TopNavbar />}
-        <main className="flex-1 overflow-hidden relative flex flex-col min-h-0">
+        <main className="flex-1 overflow-hidden relative flex flex-col min-h-0 z-10">
           <Suspense fallback={<PageLoadingFallback />}>
             <Routes>
               {/* Protected Core Routes */}
