@@ -186,7 +186,23 @@ export async function createDefaultProfile(
   email: string,
   metadata: Record<string, any> = {}
 ): Promise<UserProfile | null> {
+  if (!isValidUUID(userId)) return null;
   try {
+    // 1. Check if profile row already exists in Supabase
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (existing) {
+      return mapProfileRowToUserProfile(existing);
+    }
+
+    const initialPhotos = Array.isArray(metadata.photos) && metadata.photos.length > 0
+      ? metadata.photos
+      : [];
+
     const newProfile = {
       id: userId,
       name: metadata.name || 'Student',
@@ -194,9 +210,9 @@ export async function createDefaultProfile(
       age: metadata.age ? Number(metadata.age) : 20,
       gender: metadata.gender || 'Other',
       major: metadata.major || 'Undecided',
-      university: metadata.university || 'Stanford University',
+      university: metadata.university || 'University of Ghana (UG)',
       bio: metadata.bio || 'Excited to connect with fellow students on campus!',
-      photos: Array.isArray(metadata.photos) ? metadata.photos : [],
+      photos: initialPhotos,
       interests: ['Campus Life', 'Coffee', 'Study Groups'],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -204,12 +220,12 @@ export async function createDefaultProfile(
 
     const { data, error } = await supabase
       .from('profiles')
-      .upsert(newProfile)
+      .upsert(newProfile, { onConflict: 'id' })
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      console.warn('[databaseService] createDefaultProfile error:', error.message);
+    if (error || !data) {
+      console.warn('[databaseService] createDefaultProfile error:', error?.message);
       return mapProfileRowToUserProfile(newProfile);
     }
 
@@ -670,18 +686,48 @@ export async function updateProfilePhotos(
   userId: string,
   photos: string[]
 ): Promise<{ success: boolean; error?: string }> {
+  if (!isValidUUID(userId)) {
+    return { success: false, error: 'Invalid user ID' };
+  }
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update({
         photos,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', userId);
+      .eq('id', userId)
+      .select('id, photos')
+      .maybeSingle();
 
     if (error) {
       console.error('[databaseService] updateProfilePhotos error:', error.message);
       return { success: false, error: error.message };
+    }
+
+    // If update affected 0 rows (e.g. profile row not yet created in table), fallback to upsert
+    if (!data) {
+      console.warn('[databaseService] Profile row not found on update, attempting upsert with photos...');
+      const { data: upsertData, error: upsertError } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: userId,
+            photos,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        )
+        .select('id, photos')
+        .maybeSingle();
+
+      if (upsertError || !upsertData) {
+        console.error('[databaseService] updateProfilePhotos upsert fallback error:', upsertError?.message);
+        return {
+          success: false,
+          error: upsertError?.message || 'Profile row not found and upsert failed',
+        };
+      }
     }
 
     return { success: true };

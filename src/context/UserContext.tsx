@@ -111,21 +111,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (profile) {
-        setCurrentUser(profile);
+        const validatedPhotos = Array.isArray(profile.photos) ? profile.photos : [];
+        setCurrentUser({
+          ...profile,
+          photos: validatedPhotos,
+        });
       } else {
-        // Fallback in-memory representation
+        // Fallback in-memory representation: preserve existing photos if present
         setCurrentUser((prev) => ({
           ...prev,
           id: user.id,
           uid: user.id,
           email: user.email || prev.email,
           name: meta.name || prev.name || 'Student',
-          university: meta.university || prev.university || 'Stanford University',
+          university: meta.university || prev.university || 'University of Ghana (UG)',
           major: meta.major || prev.major || 'Undecided',
           age: meta.age ? Number(meta.age) : prev.age,
           gender: meta.gender || prev.gender || 'Other',
           bio: meta.bio !== undefined ? meta.bio : prev.bio,
-          photos: [],
+          photos: Array.isArray(prev.photos) ? prev.photos : [],
           verifiedCampus: true,
         }));
       }
@@ -150,6 +154,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function initSession() {
       try {
+        setLoading(true);
         const { data: currentSession } = await getCurrentSession();
         if (mounted) {
           if (currentSession?.user) {
@@ -180,7 +185,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(null);
         setAuthUser(null);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
     return () => {
@@ -260,23 +265,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
 
-        setUploadProgress(85);
+        setUploadProgress(80);
 
-        // 3. Append to user's photos array
+        // 3. Prepare new photos array (append to user's existing photos)
         const newPhotos = [...currentPhotos, newPhotoUrl];
 
+        // 4. Update Supabase profiles table FIRST
+        if (authUser) {
+          setUploadProgress(90);
+          const updateRes = await updateProfilePhotos(authUser.id, newPhotos);
+          if (!updateRes.success) {
+            throw new Error(updateRes.error || 'Failed to save photos to your profile in database.');
+          }
+        }
+
+        // 5. Update local state ONLY after Supabase write succeeds
         setCurrentUser((prev) => ({
           ...prev,
           photos: newPhotos,
         }));
-
-        // 4. Update Supabase profiles table
-        if (authUser) {
-          const updateRes = await updateProfilePhotos(authUser.id, newPhotos);
-          if (!updateRes.success) {
-            console.warn('[UserContext] Profile photos db sync error:', updateRes.error);
-          }
-        }
 
         setUploadProgress(100);
 
@@ -302,18 +309,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const currentPhotos = currentUser.photos || [];
         const newPhotos = currentPhotos.filter((p) => p !== photoUrl);
 
-        // Update local state immediately
+        if (authUser) {
+          // 1. Delete from Supabase Storage
+          await deletePhotoFromStorage(authUser.id, photoUrl);
+          // 2. Update profiles table before changing local state
+          const updateRes = await updateProfilePhotos(authUser.id, newPhotos);
+          if (!updateRes.success) {
+            throw new Error(updateRes.error || 'Failed to delete photo from database');
+          }
+        }
+
+        // Update local state after DB update succeeds
         setCurrentUser((prev) => ({
           ...prev,
           photos: newPhotos,
         }));
-
-        if (authUser) {
-          // 1. Delete from Supabase Storage
-          await deletePhotoFromStorage(authUser.id, photoUrl);
-          // 2. Update profiles table
-          await updateProfilePhotos(authUser.id, newPhotos);
-        }
 
         return { success: true };
       } catch (err: any) {
@@ -336,14 +346,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const [selected] = currentPhotos.splice(photoIndex, 1);
         const newPhotos = [selected, ...currentPhotos];
 
+        if (authUser) {
+          const updateRes = await updateProfilePhotos(authUser.id, newPhotos);
+          if (!updateRes.success) {
+            throw new Error(updateRes.error || 'Failed to update cover photo in database');
+          }
+        }
+
         setCurrentUser((prev) => ({
           ...prev,
           photos: newPhotos,
         }));
-
-        if (authUser) {
-          await updateProfilePhotos(authUser.id, newPhotos);
-        }
 
         return { success: true };
       } catch (err: any) {
@@ -387,7 +400,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const metadata: UserSignUpMetadata = {
       name: data.name.trim(),
-      university: data.university.trim() || 'Stanford University',
+      university: data.university.trim() || 'University of Ghana (UG)',
       major: data.major.trim() || 'Undecided',
       age: data.age || 20,
       gender: data.gender || 'Other',
@@ -404,10 +417,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (authData?.user) {
+      setLoading(true);
       if (authData.session) {
         setSession(authData.session);
       }
       await syncUserFromAuth(authData.user);
+      setLoading(false);
       return {
         success: true,
       };
@@ -502,8 +517,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     if (authData?.user) {
+      setLoading(true);
       setSession(authData.session);
       await syncUserFromAuth(authData.user);
+      setLoading(false);
       return { success: true };
     }
 
@@ -521,8 +538,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setSession(null);
       setAuthUser(null);
+      setCurrentUser(INITIAL_CURRENT_USER);
       try {
         localStorage.removeItem('twobirds_auth');
+        localStorage.removeItem('twobirds_current_user');
       } catch {}
     }
   }, []);
