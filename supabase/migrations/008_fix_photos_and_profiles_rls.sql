@@ -40,29 +40,33 @@ create policy "Users can delete photos in own folder"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- 2. Ensure profiles table and columns exist
+-- 2. Ensure profiles table exists
 create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  name text not null default 'Student',
-  email text not null default '',
-  age integer default 20,
-  gender text default 'Other',
-  major text default 'Undecided',
-  university text not null default 'University of Ghana (UG)',
-  bio text default '',
-  photos text[] default '{}'::text[],
-  interests text[] default '{}'::text[],
-  verified_campus boolean default true,
-  is_premium boolean default false,
-  preferred_gender text default 'Everyone',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  id uuid primary key references auth.users(id) on delete cascade
 );
 
--- Ensure columns exist if table was already created
+-- Crucial: Explicitly ensure ALL columns exist on public.profiles
+-- (CREATE TABLE IF NOT EXISTS does not add missing columns to an existing table)
+alter table public.profiles add column if not exists email text default '';
+alter table public.profiles add column if not exists name text default 'Student';
+alter table public.profiles add column if not exists age integer default 20;
+alter table public.profiles add column if not exists gender text default 'Other';
+alter table public.profiles add column if not exists major text default 'Undecided';
+alter table public.profiles add column if not exists university text default 'University of Ghana (UG)';
+alter table public.profiles add column if not exists bio text default '';
 alter table public.profiles add column if not exists photos text[] default '{}'::text[];
+alter table public.profiles add column if not exists interests text[] default array['Campus Life', 'Coffee', 'Study Groups'];
+alter table public.profiles add column if not exists verified_campus boolean default true;
 alter table public.profiles add column if not exists is_premium boolean default false;
+alter table public.profiles add column if not exists premium_expires_at timestamp with time zone;
+alter table public.profiles add column if not exists paystack_authorization_code text;
+alter table public.profiles add column if not exists paystack_customer_code text;
+alter table public.profiles add column if not exists paystack_subscription_code text;
+alter table public.profiles add column if not exists paystack_channel text;
+alter table public.profiles add column if not exists last_reminder_sent_at timestamp with time zone;
 alter table public.profiles add column if not exists preferred_gender text default 'Everyone';
+alter table public.profiles add column if not exists created_at timestamp with time zone default timezone('utc'::text, now());
+alter table public.profiles add column if not exists updated_at timestamp with time zone default timezone('utc'::text, now());
 
 -- Enable RLS
 alter table public.profiles enable row level security;
@@ -86,9 +90,18 @@ create policy "Users can update their own profile"
   using (auth.uid() = id);
 
 -- 3. Automatic Profile Creation Trigger on auth.users
+-- Built with bulletproof EXCEPTION block so auth signup will never 500
 create or replace function public.handle_new_user_profile()
 returns trigger as $$
+declare
+  parsed_age integer;
 begin
+  begin
+    parsed_age := coalesce(nullif(new.raw_user_meta_data->>'age', '')::integer, 20);
+  exception when others then
+    parsed_age := 20;
+  end;
+
   insert into public.profiles (
     id, email, name, university, major, age, gender, photos, interests
   )
@@ -98,13 +111,21 @@ begin
     coalesce(new.raw_user_meta_data->>'name', 'Student'),
     coalesce(new.raw_user_meta_data->>'university', 'University of Ghana (UG)'),
     coalesce(new.raw_user_meta_data->>'major', 'Undecided'),
-    coalesce((new.raw_user_meta_data->>'age')::integer, 20),
+    parsed_age,
     coalesce(new.raw_user_meta_data->>'gender', 'Other'),
     '{}'::text[],
     array['Campus Life', 'Coffee', 'Study Groups']
   )
-  on conflict (id) do nothing;
+  on conflict (id) do update set
+    email = coalesce(excluded.email, public.profiles.email),
+    name = coalesce(nullif(excluded.name, 'Student'), public.profiles.name),
+    updated_at = timezone('utc'::text, now());
+
   return new;
+exception
+  when others then
+    -- Catch all exceptions so auth.users insertion is never blocked or aborted
+    return new;
 end;
 $$ language plpgsql security definer;
 

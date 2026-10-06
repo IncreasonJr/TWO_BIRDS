@@ -63,7 +63,7 @@ export async function signUpWithEmail(
           id: userId,
           email: signUpData.user?.email || trimmedEmail,
           name: metadata.name.trim(),
-          university: metadata.university.trim() || 'Stanford University',
+          university: metadata.university.trim() || 'University of Ghana (UG)',
           major: metadata.major.trim(),
           age: metadata.age || 20,
           gender: metadata.gender || 'Other',
