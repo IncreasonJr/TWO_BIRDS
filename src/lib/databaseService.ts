@@ -225,12 +225,37 @@ export async function createDefaultProfile(
       .maybeSingle();
 
     if (error || !data) {
-      console.warn('[databaseService] createDefaultProfile error:', error?.message);
+      // Recheck in case the database trigger or another process created the row simultaneously (e.g. 409 Conflict)
+      const { data: recheck } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (recheck) {
+        return mapProfileRowToUserProfile(recheck);
+      }
+
+      console.warn('[databaseService] createDefaultProfile notice:', error?.message);
       return mapProfileRowToUserProfile(newProfile);
     }
 
     return mapProfileRowToUserProfile(data);
   } catch (err) {
+    // Even on caught exception / conflict, verify if the profile exists before giving up
+    try {
+      const { data: recheck } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (recheck) {
+        return mapProfileRowToUserProfile(recheck);
+      }
+    } catch {
+      // Ignore fallback query error
+    }
     console.error('[databaseService] createDefaultProfile unexpected error:', err);
     return null;
   }

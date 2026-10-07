@@ -55,25 +55,9 @@ export async function signUpWithEmail(
       return { data: null, error: signUpError };
     }
 
-    // Step 10: Minimal Profile Sync (placeholder table upsert)
-    const userId = signUpData.user?.id;
-    if (userId) {
-      try {
-        await supabase.from('profiles').upsert({
-          id: userId,
-          email: signUpData.user?.email || trimmedEmail,
-          name: metadata.name.trim(),
-          university: metadata.university.trim() || 'University of Ghana (UG)',
-          major: metadata.major.trim(),
-          age: metadata.age || 20,
-          gender: metadata.gender || 'Other',
-          updated_at: new Date().toISOString(),
-        });
-      } catch (profileErr) {
-        // Non-blocking: table might not be created in user's Supabase dashboard yet
-        console.warn('[Profile Sync] profiles table upsert non-blocking notice:', profileErr);
-      }
-    }
+    // Step 10: Automatic Profile Creation is handled by the database trigger
+    // (`on_auth_user_created_profile` on `auth.users`).
+    // Skipping duplicate client-side insertion to prevent 409 Conflict race conditions.
 
     // Auto-login: If signUp did not establish a session immediately, sign in right away
     let session = signUpData.session;
