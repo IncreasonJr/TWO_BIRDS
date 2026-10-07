@@ -8,13 +8,14 @@ import { SwipeCard } from '../components/SwipeCard';
 import { SwipeControls } from '../components/SwipeControls';
 import { GenderFilter } from '../components/GenderFilter';
 import { PremiumUpgradeModal } from '../components/PremiumUpgradeModal';
-import { Heart, Sparkles, MessageCircle, RefreshCw, Filter, X } from 'lucide-react';
+import { Heart, Sparkles, MessageCircle, RefreshCw, Filter, X, Users, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const BANNER_STORAGE_KEY = 'twobirds_dismiss_premium_banner';
 
 export const Home: React.FC = () => {
   const {
+    profiles,
     currentProfile,
     nextProfile,
     thirdProfile,
@@ -28,6 +29,7 @@ export const Home: React.FC = () => {
     dismissMatchModal,
     resetFeed,
     reloadFeed,
+    swipedUserIds,
   } = useSwipe();
 
   const { createMatch, setActiveMatchId } = useMatches();
@@ -37,6 +39,36 @@ export const Home: React.FC = () => {
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
+
+  const handleConfirmReset = async () => {
+    setIsResetting(true);
+    try {
+      const res = await resetFeed();
+      if (res.success) {
+        setIsResetModalOpen(false);
+        showToast('Discovery feed reset!');
+      } else {
+        showToast(res.error || 'Failed to reset discovery feed');
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to reset discovery feed');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const isDbEmpty = swipedUserIds.length === 0 && profiles.length === 0;
+
   const [isBannerDismissed, setIsBannerDismissed] = useState<boolean>(() => {
     try {
       return localStorage.getItem(BANNER_STORAGE_KEY) === 'true';
@@ -70,6 +102,21 @@ export const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full flex-1 justify-between px-3 pt-2 pb-[15px] max-w-md mx-auto w-full relative overflow-hidden bg-transparent">
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#333333] border border-[#C9A84C]/50 text-[#FFFFFF] px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 text-xs font-bold pointer-events-none"
+          >
+            <Check className="w-3.5 h-3.5 text-[#C9A84C]" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Free User Upsell Banner */}
       {!isPremium && !isBannerDismissed && (
         <div className="mb-2 p-2.5 rounded-2xl bg-gradient-to-r from-[#2A2A2A] via-[#333333] to-[#2A2A2A] border border-[#C9A84C]/40 flex items-center justify-between gap-2 shadow-md shrink-0">
@@ -166,6 +213,26 @@ export const Home: React.FC = () => {
               depth={0}
             />
           </>
+        ) : isDbEmpty ? (
+          <div className="h-full rounded-3xl bg-[#333333] border border-[#4A4A4A] flex flex-col items-center justify-center p-8 text-center space-y-4 shadow-xl text-[#FFFFFF]">
+            <div className="w-16 h-16 rounded-full bg-[#1A1A1A] text-[#C9A84C] flex items-center justify-center border border-[#C9A84C]/40 shadow-glow-gold">
+              <Users className="w-8 h-8 text-[#C9A84C]" />
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-[#FFFFFF] font-serif">No students on campus yet.</h3>
+              <p className="text-xs text-[#FFFFFF]/70 max-w-xs mt-1">
+                Invite your friends to join Two Birds and start connecting!
+              </p>
+            </div>
+            <button
+              onClick={() => reloadFeed()}
+              disabled={loading}
+              className="px-6 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-md hover:bg-[#C9A84C]/90 flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
         ) : (
           <div className="h-full rounded-3xl bg-[#333333] border border-[#4A4A4A] flex flex-col items-center justify-center p-8 text-center space-y-4 shadow-xl text-[#FFFFFF]">
             <div className="w-16 h-16 rounded-full bg-[#1A1A1A] text-[#C9A84C] flex items-center justify-center border border-[#C9A84C]/40 shadow-glow-gold">
@@ -177,13 +244,24 @@ export const Home: React.FC = () => {
                 You've seen all available student profiles on Two Birds. Check back later or restart your feed!
               </p>
             </div>
-            <button
-              onClick={resetFeed}
-              className="px-6 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-md hover:bg-[#C9A84C]/90 flex items-center gap-1.5 transition active:scale-95"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Reset Discovery Feed
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-2.5 w-full max-w-xs justify-center">
+              <button
+                onClick={() => setIsResetModalOpen(true)}
+                disabled={loading}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-md hover:bg-[#C9A84C]/90 flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Reset Discovery Feed
+              </button>
+              <button
+                onClick={() => reloadFeed()}
+                disabled={loading}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#2A2A2A] border border-[#4A4A4A] text-[#D0D0D0] hover:text-[#FFFFFF] hover:border-[#777777] text-xs font-bold shadow-md flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -309,6 +387,60 @@ export const Home: React.FC = () => {
         isOpen={isUpgradeModalOpen}
         onClose={() => setIsUpgradeModalOpen(false)}
       />
+
+      {/* Reset Discovery Feed Confirmation Modal */}
+      <AnimatePresence>
+        {isResetModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A1A1A]/80 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 16 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 16 }}
+              className="bg-[#1A1A1A] border border-[#4A4A4A] rounded-3xl w-full max-w-sm overflow-hidden flex flex-col relative shadow-2xl p-6 space-y-5 text-[#FFFFFF]"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-[#C9A84C]/15 text-[#C9A84C] border border-[#C9A84C]/40 shadow-glow-gold shrink-0">
+                  <RefreshCw className="w-5 h-5 text-[#C9A84C]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#FFFFFF]">Reset Discovery Feed?</h3>
+                  <p className="text-[11px] text-[#A0A0A0]">Start fresh with campus profiles</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#FFFFFF]/80 leading-relaxed">
+                Reset your discovery feed? You'll see everyone again, including people you passed on.
+              </p>
+
+              <div className="flex items-center gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsResetModalOpen(false)}
+                  disabled={isResetting}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-[#4A4A4A] bg-[#2A2A2A] text-xs font-bold text-[#FFFFFF] hover:bg-[#333333] transition active:scale-95 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmReset}
+                  disabled={isResetting}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold hover:bg-[#C9A84C]/90 shadow-md flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                >
+                  {isResetting ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Resetting...</span>
+                    </>
+                  ) : (
+                    <span>Reset Feed</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

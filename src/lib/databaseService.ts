@@ -315,6 +315,22 @@ export async function getSwipedIds(userId: string): Promise<string[]> {
   }
 }
 
+export async function clearUserSwipes(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase
+      .from('swipes')
+      .delete()
+      .eq('swiper_id', userId);
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to clear swipes' };
+  }
+}
+
 export async function checkForMatch(
   swiperId: string,
   swipedId: string

@@ -54,6 +54,7 @@ interface UserContextType {
   deletePhoto: (photoUrl: string) => Promise<{ success: boolean; error?: string }>;
   setPrimaryPhoto: (photoIndex: number) => Promise<{ success: boolean; error?: string }>;
   incrementSwipes: () => void;
+  resetSwipesCount: () => void;
   signup: (data: SignupData, password: string) => Promise<AuthResponse>;
   login: (email: string, password?: string) => Promise<AuthResponse>;
   logout: () => Promise<void>;
@@ -371,6 +372,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTotalSwipes((prev) => prev + 1);
   }, []);
 
+  const resetSwipesCount = useCallback(() => {
+    setTotalSwipes(0);
+  }, []);
+
   /**
    * Real Supabase Sign Up with metadata and university .edu enforcement
    */
@@ -564,6 +569,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         deletePhoto,
         setPrimaryPhoto,
         incrementSwipes,
+        resetSwipesCount,
         signup,
         login,
         logout,

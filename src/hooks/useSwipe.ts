@@ -5,12 +5,13 @@ import {
   getSwipedIds,
   saveSwipe,
   checkForMatch as checkMutualMatch,
+  clearUserSwipes,
 } from '../lib/databaseService';
 import { useUser } from '../context/UserContext';
 import { useSubscription } from './useSubscription';
 
 export function useSwipe() {
-  const { authUser, currentUser, incrementSwipes } = useUser();
+  const { authUser, currentUser, incrementSwipes, resetSwipesCount } = useUser();
   const { isPremium } = useSubscription();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -125,9 +126,29 @@ export function useSwipe() {
     }
   }, [currentIndex, history]);
 
-  const resetFeed = useCallback(() => {
-    reloadFeed();
-  }, [reloadFeed]);
+  const resetFeed = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    if (!currentUserId) return { success: false, error: 'User not signed in' };
+    setLoading(true);
+    try {
+      const clearRes = await clearUserSwipes(currentUserId);
+      if (!clearRes.success) {
+        return clearRes;
+      }
+      setSwipedUserIds([]);
+      setLikedUserIds([]);
+      setHistory([]);
+      resetSwipesCount();
+      const feedProfiles = await getAllProfilesExcept(currentUserId, [], preferredGender, isPremium);
+      setProfiles(feedProfiles);
+      setCurrentIndex(0);
+      return { success: true };
+    } catch (err: any) {
+      console.error('[useSwipe] Error resetting feed:', err);
+      return { success: false, error: err?.message || 'Failed to reset discovery feed' };
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUserId, preferredGender, isPremium, resetSwipesCount]);
 
   const dismissMatchModal = useCallback(() => {
     setNewMatch(null);
