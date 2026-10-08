@@ -90,11 +90,16 @@ export function useSwipe() {
       setCurrentIndex((prev) => prev + 1);
       incrementSwipes();
 
-      // Persist swipe to Supabase
+      // Persist swipe to Supabase and await result before checking for mutual match
       const swipeDirection: 'like' | 'pass' = direction === 'right' ? 'like' : 'pass';
-      saveSwipe(currentUserId, swipedId, swipeDirection).catch((err) => {
-        console.warn('[useSwipe] saveSwipe background error:', err);
-      });
+      try {
+        const swipeRes = await saveSwipe(currentUserId, swipedId, swipeDirection);
+        if (!swipeRes.success) {
+          console.error('[useSwipe] saveSwipe failed:', swipeRes.error);
+        }
+      } catch (swipeErr) {
+        console.error('[useSwipe] saveSwipe unexpected error:', swipeErr);
+      }
 
       if (direction === 'right') {
         setLikedUserIds((prev) => [...prev, swipedId]);
@@ -107,7 +112,7 @@ export function useSwipe() {
             setNewMatch(swipedProfile);
           }
         } catch (matchErr) {
-          console.warn('[useSwipe] checkForMatch error:', matchErr);
+          console.error('[useSwipe] checkForMatch error:', matchErr);
         }
       }
     },

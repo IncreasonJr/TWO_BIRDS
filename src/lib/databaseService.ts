@@ -345,21 +345,60 @@ export async function checkForMatch(
       .eq('direction', 'like')
       .maybeSingle();
 
-    if (recError || !reciprocal) {
+    if (recError) {
+      console.warn('[databaseService] checkForMatch error checking reciprocal swipe:', recError.message);
+      return null;
+    }
+
+    if (!reciprocal) {
       return null;
     }
 
     // Sort user IDs for unique(user_a, user_b)
     const [user_a, user_b] = [swiperId, swipedId].sort();
 
-    const { data: matchRow, error: matchError } = await supabase
+    // 1. Check if match row already exists
+    const { data: existingMatch, error: existingErr } = await supabase
       .from('matches')
-      .upsert({ user_a, user_b }, { onConflict: 'user_a,user_b' })
       .select('*')
-      .single();
+      .or(`and(user_a.eq.${user_a},user_b.eq.${user_b}),and(user_a.eq.${user_b},user_b.eq.${user_a})`)
+      .maybeSingle();
 
-    if (matchError || !matchRow) {
-      console.error('[databaseService] checkForMatch error creating match:', matchError);
+    if (existingErr) {
+      console.warn('[databaseService] checkForMatch error checking existing match:', existingErr.message);
+    }
+
+    let matchRow = existingMatch;
+
+    if (!matchRow) {
+      // 2. Insert match row
+      const { data: insertedMatch, error: insertError } = await supabase
+        .from('matches')
+        .insert({ user_a, user_b })
+        .select('*')
+        .maybeSingle();
+
+      if (insertError) {
+        console.error('[databaseService] checkForMatch error inserting match:', insertError.message, insertError);
+        // Fallback: If conflict/race condition (e.g. database trigger already inserted), re-fetch
+        const { data: fallbackMatch } = await supabase
+          .from('matches')
+          .select('*')
+          .or(`and(user_a.eq.${user_a},user_b.eq.${user_b}),and(user_a.eq.${user_b},user_b.eq.${user_a})`)
+          .maybeSingle();
+
+        if (fallbackMatch) {
+          matchRow = fallbackMatch;
+        } else {
+          return null;
+        }
+      } else {
+        matchRow = insertedMatch;
+      }
+    }
+
+    if (!matchRow) {
+      console.error('[databaseService] checkForMatch failed to create or retrieve match');
       return null;
     }
 
