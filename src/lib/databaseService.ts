@@ -445,67 +445,133 @@ export async function checkForMatch(
    ========================================================================== */
 
 export async function getUserMatches(userId: string): Promise<Match[]> {
-  if (!isValidUUID(userId)) return [];
+  if (!isValidUUID(userId)) {
+    console.warn('[databaseService] getUserMatches called with invalid UUID:', userId);
+    return [];
+  }
   try {
-    const blockedIds = await getAllBlockedRelationIds(userId);
-    const blockedSet = new Set(blockedIds);
+    const cleanUserId = userId.trim().toLowerCase();
+    const blockedIds = await getAllBlockedRelationIds(cleanUserId);
+    const blockedSet = new Set(blockedIds.map((id) => id.toLowerCase().trim()));
 
     const { data: matchRows, error } = await supabase
       .from('matches')
       .select('*')
-      .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+      .or(`user_a.eq.${cleanUserId},user_b.eq.${cleanUserId}`)
       .order('created_at', { ascending: false });
 
-    if (error || !matchRows) {
-      console.warn('[databaseService] getUserMatches error:', error?.message);
+    if (error) {
+      console.warn('[databaseService] getUserMatches query error:', error.message);
+      return [];
+    }
+
+    if (!matchRows || matchRows.length === 0) {
       return [];
     }
 
     const matches: Match[] = [];
 
     for (const row of matchRows) {
-      const partnerId = row.user_a === userId ? row.user_b : row.user_a;
-      if (blockedSet.has(partnerId)) {
-        continue;
+      try {
+        const uA = (row.user_a || '').toLowerCase().trim();
+        const partnerId = uA === cleanUserId ? row.user_b : row.user_a;
+
+        if (!partnerId) continue;
+        if (blockedSet.has(partnerId.toLowerCase().trim())) {
+          continue;
+        }
+
+        const partnerProfile = await getProfile(partnerId);
+
+        // Fetch last message safely without breaking the match list on failure
+        let lastMsg: any = null;
+        try {
+          const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('match_id', row.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          lastMsg = data;
+        } catch (msgErr) {
+          console.warn('[databaseService] getUserMatches message query error for match', row.id, msgErr);
+        }
+
+        const photos = Array.isArray(partnerProfile?.photos) && partnerProfile.photos.length > 0
+          ? partnerProfile.photos
+          : ['/logo192.png'];
+
+        matches.push({
+          id: row.id,
+          userId: partnerId,
+          name: partnerProfile?.name || 'Classmate',
+          age: partnerProfile?.age || 20,
+          major: partnerProfile?.major || '',
+          photos,
+          onlineStatus: 'online',
+          lastActive: new Date(),
+          matchedAt: row.created_at,
+          messages: [],
+          users: [row.user_a, row.user_b],
+          user: partnerProfile || ({} as any),
+          lastMessage: lastMsg?.content || 'Matched! Send the first message.',
+          lastMessageTimestamp: lastMsg?.created_at
+            ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : 'Just now',
+          unread: lastMsg ? !lastMsg.is_read && lastMsg.sender_id !== cleanUserId : true,
+          online: true,
+        });
+      } catch (rowErr) {
+        console.error('[databaseService] Error parsing match row:', rowErr);
       }
-      const partnerProfile = await getProfile(partnerId);
-
-      // Fetch last message
-      const { data: lastMsg } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('match_id', row.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      matches.push({
-        id: row.id,
-        userId: partnerId,
-        name: partnerProfile?.name || 'Student',
-        age: partnerProfile?.age || 20,
-        major: partnerProfile?.major || '',
-        photos: partnerProfile?.photos || ['/logo192.png'],
-        onlineStatus: 'online',
-        lastActive: new Date(),
-        matchedAt: row.created_at,
-        messages: [],
-        users: [row.user_a, row.user_b],
-        user: partnerProfile || ({} as any),
-        lastMessage: lastMsg?.content || 'Matched! Send the first message.',
-        lastMessageTimestamp: lastMsg?.created_at
-          ? new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          : 'Just now',
-        unread: lastMsg ? !lastMsg.is_read && lastMsg.sender_id !== userId : true,
-        online: true,
-      });
     }
 
     return matches;
   } catch (err) {
-    console.error('[databaseService] getUserMatches error:', err);
+    console.error('[databaseService] getUserMatches unexpected error:', err);
     return [];
   }
+}
+
+export function subscribeToMatches(
+  userId: string,
+  callback: () => void
+): () => void {
+  if (!isValidUUID(userId)) return () => {};
+  const cleanUserId = userId.trim().toLowerCase();
+
+  const channel = supabase
+    .channel(`matches:${cleanUserId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'matches',
+        filter: `user_a=eq.${cleanUserId}`,
+      },
+      () => {
+        callback();
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'matches',
+        filter: `user_b=eq.${cleanUserId}`,
+      },
+      () => {
+        callback();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export async function getMatchById(matchId: string, currentUserId: string): Promise<Match | null> {
@@ -514,20 +580,27 @@ export async function getMatchById(matchId: string, currentUserId: string): Prom
       .from('matches')
       .select('*')
       .eq('id', matchId)
-      .single();
+      .maybeSingle();
 
     if (error || !row) return null;
 
-    const partnerId = row.user_a === currentUserId ? row.user_b : row.user_a;
+    const cleanUserId = currentUserId.toLowerCase().trim();
+    const uA = (row.user_a || '').toLowerCase().trim();
+    const partnerId = uA === cleanUserId ? row.user_b : row.user_a;
+    if (!partnerId) return null;
+
     const partnerProfile = await getProfile(partnerId);
+    const photos = Array.isArray(partnerProfile?.photos) && partnerProfile.photos.length > 0
+      ? partnerProfile.photos
+      : ['/logo192.png'];
 
     return {
       id: row.id,
       userId: partnerId,
-      name: partnerProfile?.name || 'Student',
+      name: partnerProfile?.name || 'Classmate',
       age: partnerProfile?.age || 20,
       major: partnerProfile?.major || '',
-      photos: partnerProfile?.photos || ['/logo192.png'],
+      photos,
       onlineStatus: 'online',
       lastActive: new Date(),
       matchedAt: row.created_at,

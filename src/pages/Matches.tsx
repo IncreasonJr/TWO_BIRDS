@@ -1,13 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMatches } from '../hooks/useMatches';
 import { Sparkles, Search, ChevronRight, Heart, RefreshCw } from 'lucide-react';
 import { PremiumBadge } from '../components/PremiumBadge';
 
 export const Matches: React.FC = () => {
-  const { matches, setActiveMatchId, loadingMatches } = useMatches();
+  const { matches, setActiveMatchId, loadingMatches, refreshMatches } = useMatches();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    refreshMatches();
+  }, [refreshMatches]);
 
   const handleSelectMatch = (matchId: string) => {
     setActiveMatchId(matchId);
@@ -60,12 +64,22 @@ export const Matches: React.FC = () => {
             <Heart className="w-6 h-6" />
           </div>
           <p className="text-sm font-bold text-[#FFFFFF]">No matches yet. Start swiping!</p>
-          <button
-            onClick={() => navigate('/')}
-            className="px-5 py-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold active:scale-95 transition"
-          >
-            Explore Profiles
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/')}
+              className="px-5 py-2 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold active:scale-95 transition"
+            >
+              Explore Profiles
+            </button>
+            <button
+              onClick={() => refreshMatches()}
+              className="p-2 rounded-full bg-[#333333] border border-[#4A4A4A] text-[#C9A84C] hover:text-[#FFFFFF] active:scale-95 transition"
+              title="Refresh matches"
+              aria-label="Refresh matches"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       ) : (
         <>

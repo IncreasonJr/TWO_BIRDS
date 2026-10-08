@@ -25,8 +25,9 @@ import {
   MoreVertical,
   Shield,
   Ban,
+  RefreshCw,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Message } from '../types';
 import { useUser } from '../context/UserContext';
 import { ReportModal } from '../components/ReportModal';
@@ -108,7 +109,17 @@ const VoiceMessageBubble: React.FC<{ msg: Message; isMe: boolean }> = ({ msg, is
 };
 
 export const Chat: React.FC = () => {
-  const { activeMatch, activeMessages, isTyping, handleSendMessage, handleSendVoiceNote, refreshMatches } = useMatches();
+  const {
+    activeMatch,
+    matches,
+    setActiveMatchId,
+    activeMessages,
+    isTyping,
+    handleSendMessage,
+    handleSendVoiceNote,
+    refreshMatches,
+    loadingMatches,
+  } = useMatches();
   const { authUser, currentUser } = useUser();
   const currentUserId = authUser?.id || currentUser?.id;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -118,6 +129,22 @@ export const Chat: React.FC = () => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const queryMatchId = searchParams.get('matchId');
+
+  // Refresh matches when entering chat to ensure latest conversations are present
+  useEffect(() => {
+    refreshMatches();
+  }, [refreshMatches]);
+
+  // Synchronize active match from query parameter or default to latest match
+  useEffect(() => {
+    if (queryMatchId) {
+      setActiveMatchId(queryMatchId);
+    } else if (!activeMatch && matches.length > 0) {
+      setActiveMatchId(matches[0].id);
+    }
+  }, [queryMatchId, activeMatch, matches, setActiveMatchId]);
 
   const handleBlockSuccess = async () => {
     setIsProfileOpen(false);
@@ -139,19 +166,43 @@ export const Chat: React.FC = () => {
     handleSendMessage(suggestion);
   };
 
+  if (loadingMatches && !activeMatch) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center space-y-3 bg-transparent text-[#FFFFFF]">
+        <div className="w-12 h-12 rounded-2xl bg-[#333333] border border-[#C9A84C]/40 flex items-center justify-center text-[#C9A84C]">
+          <RefreshCw className="w-5 h-5 animate-spin text-[#C9A84C]" />
+        </div>
+        <p className="text-xs text-[#A0A0A0] font-semibold">Loading conversation...</p>
+      </div>
+    );
+  }
+
   if (!activeMatch) {
     return (
       <div className="flex flex-col items-center justify-center h-full flex-1 p-6 text-center space-y-3 bg-transparent text-[#FFFFFF]">
         <div className="w-14 h-14 rounded-full bg-[#333333] border border-[#4A4A4A] flex items-center justify-center text-[#C9A84C]">
           <MessageSquare className="w-6 h-6" />
         </div>
-        <p className="text-sm font-bold text-[#FFFFFF]">No active match selected.</p>
-        <button
-          onClick={() => navigate('/matches')}
-          className="px-5 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold transition"
-        >
-          Go to Matches
-        </button>
+        <p className="text-sm font-bold text-[#FFFFFF]">No active match selected</p>
+        <p className="text-xs text-[#A0A0A0] max-w-xs">
+          Match with classmates in the discovery feed or select someone from your matches list.
+        </p>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={() => navigate('/matches')}
+            className="px-5 py-2.5 rounded-full bg-[#C9A84C] text-[#1A1A1A] text-xs font-extrabold shadow-glow-gold active:scale-95 transition"
+          >
+            View Matches
+          </button>
+          <button
+            onClick={() => refreshMatches()}
+            className="p-2.5 rounded-full bg-[#333333] border border-[#4A4A4A] text-[#C9A84C] hover:text-[#FFFFFF] active:scale-95 transition"
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     );
   }

@@ -6,6 +6,7 @@ import {
   getMessages,
   sendMessage as sendDbMessage,
   subscribeToMessages,
+  subscribeToMatches,
   checkForMatch as checkMutualMatch,
 } from '../lib/databaseService';
 
@@ -20,6 +21,7 @@ interface MatchContextType {
   typingUsers: Record<string, boolean>;
   totalUnread: number;
   setActiveMatchId: (id: string) => void;
+  addMatch: (match: Match) => void;
   createMatch: (user: UserProfile) => Promise<Match | null>;
   handleSendMessage: (text: string) => Promise<void>;
   handleSendMessageFrom: (senderId: string, text: string, targetMatchId?: string) => Promise<void>;
@@ -32,8 +34,8 @@ interface MatchContextType {
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
 
 export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { authUser, currentUser } = useUser();
-  const currentUserId = authUser?.id || currentUser?.id;
+  const { authUser, currentUser, loading: authLoading } = useUser();
+  const currentUserId = authUser?.id || (!authLoading && currentUser?.id ? currentUser.id : undefined);
 
   const [matches, setMatches] = useState<Match[]>([]);
   const [activeMatchId, setActiveMatchIdState] = useState<string>('');
@@ -54,15 +56,18 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const dbMatches = await getUserMatches(currentUserId);
       setMatches(dbMatches);
-      if (dbMatches.length > 0 && !activeMatchId) {
-        setActiveMatchIdState(dbMatches[0].id);
-      }
+      setActiveMatchIdState((prevId) => {
+        if (prevId && dbMatches.some((m) => m.id === prevId)) {
+          return prevId;
+        }
+        return dbMatches.length > 0 ? dbMatches[0].id : '';
+      });
     } catch (err) {
       console.error('[MatchContext] Error loading matches:', err);
     } finally {
       setLoadingMatches(false);
     }
-  }, [currentUserId, activeMatchId]);
+  }, [currentUserId]);
 
   useEffect(() => {
     let mounted = true;
@@ -75,9 +80,12 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getUserMatches(currentUserId).then((dbMatches) => {
       if (mounted) {
         setMatches(dbMatches);
-        if (dbMatches.length > 0 && !activeMatchId) {
-          setActiveMatchIdState(dbMatches[0].id);
-        }
+        setActiveMatchIdState((prevId) => {
+          if (prevId && dbMatches.some((m) => m.id === prevId)) {
+            return prevId;
+          }
+          return dbMatches.length > 0 ? dbMatches[0].id : '';
+        });
         setLoadingMatches(false);
       }
     });
@@ -85,7 +93,21 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       mounted = false;
     };
-  }, [currentUserId, activeMatchId]);
+  }, [currentUserId]);
+
+  // 2. Realtime subscription for newly created mutual matches
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    const unsubscribe = subscribeToMatches(currentUserId, () => {
+      console.log('[MatchContext] Realtime match event received, refreshing matches...');
+      refreshMatches();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUserId, refreshMatches]);
 
   const activeMatch = useMemo(() => {
     return matches.find((m) => m.id === activeMatchId) || matches[0] || null;
@@ -172,6 +194,17 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   }, []);
 
+  const addMatch = useCallback((newMatch: Match) => {
+    setMatches((prev) => {
+      const exists = prev.some((m) => m.id === newMatch.id);
+      if (exists) {
+        return prev.map((m) => (m.id === newMatch.id ? { ...m, ...newMatch } : m));
+      }
+      return [newMatch, ...prev];
+    });
+    setActiveMatchIdState(newMatch.id);
+  }, []);
+
   const createMatch = useCallback(async (user: UserProfile): Promise<Match | null> => {
     if (!currentUserId) return null;
 
@@ -184,15 +217,14 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const matchObj = await checkMutualMatch(currentUserId, user.id);
       if (matchObj) {
-        setMatches((prev) => [matchObj, ...prev]);
-        setActiveMatchIdState(matchObj.id);
+        addMatch(matchObj);
         return matchObj;
       }
     } catch (err) {
       console.warn('[MatchContext] createMatch error:', err);
     }
     return null;
-  }, [currentUserId, matches]);
+  }, [currentUserId, matches, addMatch]);
 
   const handleSendMessageFrom = useCallback(async (
     senderId: string,
@@ -281,6 +313,7 @@ export const MatchProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         typingUsers,
         totalUnread,
         setActiveMatchId,
+        addMatch,
         createMatch,
         handleSendMessage,
         handleSendMessageFrom,

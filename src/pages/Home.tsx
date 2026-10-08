@@ -32,7 +32,7 @@ export const Home: React.FC = () => {
     swipedUserIds,
   } = useSwipe();
 
-  const { createMatch, setActiveMatchId } = useMatches();
+  const { createMatch, setActiveMatchId, addMatch } = useMatches();
   const { currentUser } = useUser();
   const { isPremium } = useSubscription();
   const navigate = useNavigate();
@@ -89,6 +89,13 @@ export const Home: React.FC = () => {
   const onSwipeAction = (direction: 'left' | 'right') => {
     handleSwipe(direction);
   };
+
+  // Sync newly created match into MatchContext immediately
+  useEffect(() => {
+    if (createdMatchObj) {
+      addMatch(createdMatchObj);
+    }
+  }, [createdMatchObj, addMatch]);
 
   // Auto-dismiss match modal after 4 seconds if not clicked
   useEffect(() => {
@@ -343,11 +350,15 @@ export const Home: React.FC = () => {
               {/* Action Buttons */}
               <div className="space-y-2.5 pt-1">
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (createdMatchObj) {
+                      addMatch(createdMatchObj);
                       setActiveMatchId(createdMatchObj.id);
                     } else if (newMatch) {
-                      createMatch(newMatch);
+                      const created = await createMatch(newMatch);
+                      if (created) {
+                        setActiveMatchId(created.id);
+                      }
                     }
                     dismissMatchModal();
                     navigate('/chat');
