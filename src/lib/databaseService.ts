@@ -336,39 +336,65 @@ export async function checkForMatch(
   swipedId: string
 ): Promise<Match | null> {
   try {
-    // Check reciprocal like
-    const { data: reciprocal, error: recError } = await supabase
-      .from('swipes')
-      .select('*')
-      .eq('swiper_id', swipedId)
-      .eq('swiped_id', swiperId)
-      .eq('direction', 'like')
-      .maybeSingle();
-
-    if (recError) {
-      console.warn('[databaseService] checkForMatch error checking reciprocal swipe:', recError.message);
-      return null;
-    }
-
-    if (!reciprocal) {
-      return null;
-    }
-
-    // Sort user IDs for unique(user_a, user_b)
+    let matchRow: any = null;
     const [user_a, user_b] = [swiperId, swipedId].sort();
 
-    // 1. Check if match row already exists
-    const { data: existingMatch, error: existingErr } = await supabase
-      .from('matches')
-      .select('*')
-      .or(`and(user_a.eq.${user_a},user_b.eq.${user_b}),and(user_a.eq.${user_b},user_b.eq.${user_a})`)
-      .maybeSingle();
+    // 1. Try atomic RPC first (runs as SECURITY DEFINER in PostgreSQL, immune to RLS restrictions)
+    try {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('check_and_create_mutual_match', {
+        p_swiper_id: swiperId,
+        p_swiped_id: swipedId,
+      });
 
-    if (existingErr) {
-      console.warn('[databaseService] checkForMatch error checking existing match:', existingErr.message);
+      if (!rpcError && rpcData) {
+        if (!rpcData.is_match) {
+          // Mutual match requires both users to like each other
+          return null;
+        }
+        matchRow = {
+          id: rpcData.match_id,
+          user_a: rpcData.user_a,
+          user_b: rpcData.user_b,
+          created_at: rpcData.created_at,
+        };
+      }
+    } catch (rpcCatch) {
+      console.warn('[databaseService] check_and_create_mutual_match RPC fallback:', rpcCatch);
     }
 
-    let matchRow = existingMatch;
+    // 2. Fallback to direct client-side query if RPC not yet installed or returned null
+    if (!matchRow) {
+      // Check reciprocal like
+      const { data: reciprocal, error: recError } = await supabase
+        .from('swipes')
+        .select('*')
+        .eq('swiper_id', swipedId)
+        .eq('swiped_id', swiperId)
+        .eq('direction', 'like')
+        .maybeSingle();
+
+      if (recError) {
+        console.warn('[databaseService] checkForMatch error checking reciprocal swipe:', recError.message);
+        return null;
+      }
+
+      if (!reciprocal) {
+        return null;
+      }
+
+      // Check if match row already exists
+      const { data: existingMatch, error: existingErr } = await supabase
+        .from('matches')
+        .select('*')
+        .or(`and(user_a.eq.${user_a},user_b.eq.${user_b}),and(user_a.eq.${user_b},user_b.eq.${user_a})`)
+        .maybeSingle();
+
+      if (existingErr) {
+        console.warn('[databaseService] checkForMatch error checking existing match:', existingErr.message);
+      }
+
+      matchRow = existingMatch;
+    }
 
     if (!matchRow) {
       // 2. Insert match row
